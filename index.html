@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Phòng Chống Ma Túy</title>
+    <style>
+    :root {
+        /* Màu sắc dựa trên hình ảnh của bạn */
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --primary-cyan: #00f2ff; /* Xanh Neon */
+        --lime-green: #9dfc1c;  /* Màu đúng */
+        --blood-red: #ff3e3e;   /* Màu sai */
+        --text-color: #ffffff;
+    }
+
+    body {
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /* Nền Gradient Tím Đậm - Xanh Đen */
+        background: radial-gradient(circle at 20% 30%, #171d54 0%, #19173a 100%);
+        background-attachment: fixed;
+        color: var(--text-color);
+        overflow: hidden;
+    }
+
+    /* Hiệu ứng đốm sáng mờ ảo phía sau để giống ảnh */
+    body::before {
+        content: "";
+        position: absolute;
+        width: 400px; height: 400px;
+        background: rgba(183, 0, 255, 0.15);
+        filter: blur(120px);
+        bottom: -100px; left: -100px;
+        z-index: -1;
+    }
+
+    .quiz-container {
+        /* Hiệu ứng kính mờ Glassmorphism */
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        width: 95%;
+        max-width: 600px;
+        padding: 35px;
+        border-radius: 30px; /* Bo góc mềm mại hơn */
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        text-align: center;
+    }
+
+    .stats-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .hearts-container {
+        font-size: 1.4rem;
+        display: flex;
+        gap: 4px;
+    }
+
+    #progress-bar {
+        height: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        margin-bottom: 25px;
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
+    }
+
+    #progress-fill {
+        height: 100%;
+        /* Màu dải tiến trình từ Xanh sang Lime */
+        background: linear-gradient(90deg, var(--primary-cyan), var(--lime-green));
+        width: 0%;
+        transition: width 0.4s ease;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    h1, h2 { 
+        color: var(--primary-cyan); 
+        text-shadow: 0 0 15px rgba(0, 242, 255, 0.5); 
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    .question {
+        font-size: 1.2rem;
+        font-weight: 600;
+        text-align: left;
+        margin-bottom: 25px;
+        line-height: 1.5;
+        min-height: 4rem;
+    }
+
+    .options { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; /* Chia 2 cột giống ảnh */
+        gap: 15px; 
+    }
+
+    .option-btn {
+        padding: 14px 20px;
+        text-align: center;
+        border: 1px solid var(--glass-border);
+        border-radius: 50px; /* Nút hình bầu dục giống ảnh */
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .option-btn:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--primary-cyan);
+        transform: translateY(-2px);
+    }
+
+    .option-btn.correct { 
+        background: var(--lime-green) !important; 
+        color: #000 !important; 
+        border-color: var(--lime-green);
+        font-weight: bold;
+    }
+
+    .option-btn.wrong { 
+        background: var(--blood-red) !important; 
+        color: white !important; 
+        border-color: var(--blood-red);
+    }
+
+    /* Nút hành động chính (Bắt đầu / Tiếp theo) */
+    .main-btn {
+        margin-top: 30px;
+        width: auto;
+        min-width: 200px;
+        padding: 15px 40px;
+        background: var(--primary-cyan);
+        color: #000;
+        border: none;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    }
+
+    .main-btn:hover { 
+        background: #fff; 
+        box-shadow: 0 0 30px var(--primary-cyan);
+        transform: scale(1.05);
+    }
+
+    .heart-blink { animation: blinker 0.3s linear 3; }
+    @keyframes blinker { 50% { opacity: 0; transform: scale(1.3); } }
+</style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="start-screen" class="screen active">
+        <h1>BÓNG TỐI MA TÚY</h1>
+        <p style="color: #94a3b8;">Thử thách kiến thức để bảo vệ chính mình.<br>Bạn có 10 mạng sống (❤️).</p>
+        <button class="main-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="stats-bar">
+            <div id="hearts" class="hearts-container"></div>
+            <div id="q-count" style="color: var(--accent-color); font-weight: bold;"></div>
+        </div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options-container"></div>
+        <button id="next-btn" class="main-btn" onclick="nextQuestion()">TIẾP THEO</button>
+    </div>
+
+    <div id="game-over-screen" class="screen">
+        <h2 style="color: var(--wrong-color);">HẾT LƯỢT CHƠI</h2>
+        <p>Bạn đã bị lôi kéo vào bóng tối. Hãy tỉnh táo hơn!</p>
+        <p id="fail-score-text"></p>
+        <button class="main-btn" onclick="location.reload()">THỬ LẠI</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2>CHIẾN THẮNG</h2>
+        <div id="score-display" style="font-size: 2.5rem; margin: 20px 0;"></div>
+        <p id="score-message"></p>
+        <button class="main-btn" onclick="location.reload()">CHƠI LẠI</button>
+    </div>
+</div>
+
+<script>
+    const questionsData = [
+        // 20 CÂU CƠ BẢN
+        { q: "Ma túy là gì?", options: ["Chất gây nghiện, chất hướng thần", "Thực phẩm bổ sung", "Thuốc bổ", "Gia vị"], correct: 0 },
+        { q: "Luật Phòng, chống ma túy hiện hành của Việt Nam có hiệu lực từ ngày nào?", options: ["01/01/2021", "01/01/2022", "01/07/2021", "01/01/2020"], correct: 1 },
+        { q: "Cây nào sau đây bị cấm trồng tại Việt Nam?", options: ["Cây lúa", "Cây thuốc phiện", "Cây tiêu", "Cây cà phê"], correct: 1 },
+        { q: "Ma túy đá thuộc nhóm chất nào?", options: ["Nhóm kích thích", "Nhóm ức chế", "Nhóm vitamin", "Nhóm an thần"], correct: 0 },
+        { q: "Hành vi sử dụng trái phép chất ma túy bị xử lý như thế nào?", options: ["Phạt hành chính hoặc cai nghiện", "Không bị xử lý", "Chỉ bị nhắc nhở", "Phạt tù chung thân"], correct: 0 },
+        { q: "Ngày 'Toàn dân phòng, chống ma túy' là ngày nào?", options: ["26/3", "26/6", "02/9", "20/11"], correct: 1 },
+        { q: "Tiêm chích ma túy chung kim tiêm dễ lây bệnh gì nhất?", options: ["HIV/AIDS", "Cúm", "Đau mắt đỏ", "Viêm họng"], correct: 0 },
+        { q: "Heroin thường được dân gian gọi là gì?", options: ["Cái chết trắng", "Kẹo ngọt", "Bột mì", "Đường"], correct: 0 },
+        { q: "Thuốc lắc (Ecstasy) thường có dạng gì?", options: ["Dạng lỏng", "Dạng lá khô", "Dạng viên nén nhiều màu", "Dạng bột đen"], correct: 2 },
+        { q: "Cần sa có tên gọi khác là gì?", options: ["Cỏ", "Đá", "Kẹo", "Bột"], correct: 0 },
+        { q: "Hút thuốc lá điện tử chứa tinh dầu ma túy có gây nghiện không?", options: ["Có, rất nguy hiểm", "Không", "Chỉ gây nghiện nhẹ", "An toàn"], correct: 0 },
+        { q: "Người nghiện ma túy thường có biểu hiện gì?", options: ["Da hồng hào", "Sụt cân, tâm tính thay đổi", "Khỏe mạnh hơn", "Tập trung cao độ"], correct: 1 },
+        { q: "Gia đình có trách nhiệm gì trong phòng chống ma túy?", options: ["Mặc kệ", "Che giấu", "Giáo dục, quản lý thành viên", "Tiếp tay sử dụng"], correct: 2 },
+        { q: "Lực lượng chuyên trách phòng chống ma túy thuộc đơn vị nào?", options: ["Công an", "Bộ Y tế", "Bộ Tài chính", "Bộ Giáo dục"], correct: 0 },
+        { q: "Cai nghiện ma túy có mấy hình thức chính?", options: ["Tự nguyện và Bắt buộc", "Chỉ có bắt buộc", "Chỉ có tự nguyện", "Không có hình thức nào"], correct: 0 },
+        { q: "Sử dụng 'bóng cười' cùng ma túy có bị cấm không?", options: ["Có, vi phạm pháp luật", "Được phép", "Chỉ cấm ở trường học", "Chỉ cấm ở quán bar"], correct: 0 },
+        { q: "Khi bị người khác rủ rê dùng thử chất lạ, bạn nên làm gì?", options: ["Thử một chút", "Từ chối và báo người lớn/công an", "Rủ bạn khác cùng thử", "Im lặng dùng"], correct: 1 },
+        { q: "Tác hại lớn nhất của ma túy đối với xã hội là gì?", options: ["Gây nghèo đói", "Gây mất trật tự, tội phạm tăng", "Làm đẹp cảnh quan", "Tăng GDP"], correct: 1 },
+        { q: "Ketamine thường được sử dụng trái phép dưới dạng nào?", options: ["Hít bột trắng", "Uống nước", "Dán vào da", "Ăn kèm cơm"], correct: 0 },
+        { q: "Người từ bao nhiêu tuổi bị đưa đi cai nghiện bắt buộc?", options: ["Từ đủ 18 tuổi", "Từ 12 đến dưới 18 tuổi", "Cả 2 phương án trên", "Chỉ người già"], correct: 2 },
+
+        // 20 CÂU TRUNG BÌNH
+        { q: "Hành vi 'Tổ chức sử dụng trái phép chất ma túy' có thể bị phạt?", options: ["Phạt hành chính", "Phạt tù từ 2 năm đến tử hình", "Chỉ bị cảnh cáo", "Phạt tiền 1 triệu"], correct: 1 },
+        { q: "Người từ đủ bao nhiêu tuổi phải chịu trách nhiệm hình sự về mọi tội ma túy?", options: ["Từ đủ 14 tuổi", "Từ đủ 16 tuổi", "Từ đủ 18 tuổi", "Từ đủ 21 tuổi"], correct: 1 },
+        { q: "Methadone là thuốc dùng để làm gì?", options: ["Ma túy cực mạnh", "Thuốc điều trị thay thế nhóm thuốc phiện", "Thuốc ngủ", "Kẹo tăng lực"], correct: 1 },
+        { q: "LSD (Ma túy tem giấy) gây ra tác động gì?", options: ["Gây ngủ sâu", "Gây ảo giác cực mạnh", "Làm giảm đau", "Tăng cân"], correct: 1 },
+        { q: "Vận chuyển ma túy hộ người khác lấy tiền công bị xử lý thế nào?", options: ["Không phạm tội", "Bị xử tội Vận chuyển trái phép chất ma túy", "Chỉ phạt hành chính", "Được tha thứ"], correct: 1 },
+        { q: "Người cai nghiện xong được quản lý tại địa phương trong bao lâu?", options: ["1 năm", "2 năm", "3 năm", "5 năm"], correct: 0 },
+        { q: "Hành vi chứa chấp người khác sử dụng ma túy là phạm pháp?", options: ["Đúng", "Sai", "Chỉ sai khi lấy tiền", "Chỉ sai ở nhà riêng"], correct: 0 },
+        { q: "Ma túy 'Nước vui' thường chứa chất gì?", options: ["Vitamin C", "Ecstasy, Meth, Ketamine", "Đường kính", "Cafein"], correct: 1 },
+        { q: "Xét nghiệm ma túy qua mẫu bệnh phẩm nào là chính xác nhất?", options: ["Mồ hôi", "Nước tiểu, máu, tóc", "Quần áo", "Nước bọt"], correct: 1 },
+        { q: "Tội mua bán trái phép chất ma túy có mức án cao nhất là?", options: ["20 năm tù", "Chung thân", "Tử hình", "Cải tạo không giam giữ"], correct: 2 },
+        { q: "Dấu hiệu 'ngáo đá' là do sử dụng loại ma túy nào?", options: ["Thuốc phiện", "Ma túy đá (Methamphetamine)", "Cần sa", "Morphine"], correct: 1 },
+        { q: "Ma túy tổng hợp xâm nhập vào cơ thể chủ yếu qua đường nào?", options: ["Đường hô hấp", "Đường tiêu hóa", "Đường máu", "Tất cả các đường trên"], correct: 3 },
+        { q: "Hành vi trồng cây thuốc phiện số lượng bao nhiêu thì bị xử lý hình sự?", options: ["Từ 500 cây trở lên", "Dưới 500 cây nhưng đã bị xử phạt hành chính", "Cả 2 đều đúng", "Chỉ cần trồng 1 cây"], correct: 2 },
+        { q: "Phụ nữ mang thai dùng ma túy gây hại thế nào cho thai nhi?", options: ["Con thông minh hơn", "Gây dị tật, trẻ bị nghiện bẩm sinh", "Không ảnh hưởng", "Chỉ hại mẹ"], correct: 1 },
+        { q: "Tội lôi kéo người khác sử dụng ma túy bị phạt thế nào?", options: ["Phạt tiền", "Phạt tù từ 1 năm đến tử hình", "Nhắc nhở", "Không xử lý"], correct: 1 },
+        { q: "Thời gian cai nghiện bắt buộc tối đa là bao lâu?", options: ["6 tháng", "12 tháng", "24 tháng", "5 năm"], correct: 2 },
+        { q: "Người nghiện có được lái xe không?", options: ["Được nếu chưa phê", "Tuyệt đối không", "Chỉ được lái xe đạp", "Được nếu có giấy phép"], correct: 1 },
+        { q: "Ma túy làm hủy hoại hệ thống nào trong cơ thể nhất?", options: ["Hệ tiêu hóa", "Hệ thần kinh", "Hệ vận động", "Lớp da"], correct: 1 },
+        { q: "Cơ quan nào ra quyết định đưa người đi cai bắt buộc?", options: ["Công an huyện", "Tòa án nhân dân cấp huyện", "UBND xã", "Viện kiểm sát"], correct: 1 },
+        { q: "Tiền chất ma túy là gì?", options: ["Ma túy đã pha loãng", "Hóa chất dùng để điều chế ma túy", "Một loại kẹo", "Sản phẩm sau khi dùng ma túy"], correct: 1 },
+
+        // 10 CÂU NÂNG CAO
+        { q: "Sự khác biệt giữa 'người sử dụng' và 'người nghiện' theo Luật 2021?", options: ["Là một", "Người sử dụng là giai đoạn đầu, chưa lệ thuộc; Người nghiện đã lệ thuộc", "Người nghiện nhẹ hơn", "Chỉ khác tên gọi"], correct: 1 },
+        { q: "Hành vi cưỡng ép người dưới 18 tuổi dùng ma túy bị phạt tối đa?", options: ["15 năm tù", "20 năm tù", "Chung thân hoặc Tử hình", "10 năm tù"], correct: 2 },
+        { q: "Cai nghiện tự nguyện tại gia đình tối thiểu bao lâu?", options: ["3 tháng", "6 tháng", "12 tháng", "1 tháng"], correct: 1 },
+        { q: "Vận chuyển bao nhiêu gram Heroin thì bị khung Tử hình?", options: ["50g", "100g trở lên", "200g", "500g"], correct: 1 },
+        { q: "Chất ma túy nào nằm trong danh mục Tuyệt đối cấm sử dụng?", options: ["Heroin", "Morphine", "Ketamine", "Diazepam"], correct: 0 },
+        { q: "Hành vi sản xuất trái phép chất ma túy có mức án thấp nhất là?", options: ["2 năm", "7 năm", "15 năm", "20 năm"], correct: 1 },
+        { q: "Người nghiện vi phạm hình sự có được miễn tội không?", options: ["Có", "Vẫn phải chịu trách nhiệm hình sự", "Được giảm 50% án", "Được đi cai thay đi tù"], correct: 1 },
+        { q: "Trách nhiệm của người sử dụng ma túy khi bị phát hiện?", options: ["Khai báo nguồn gốc ma túy", "Được giữ bí mật", "Không cần làm gì", "Được nhận tiền thưởng"], correct: 0 },
+        { q: "Hành vi cưỡng ép người khác sử dụng ma túy dẫn đến chết người bị phạt?", options: ["20 năm", "Chung thân hoặc Tử hình", "15 năm", "Tử hình bắt buộc"], correct: 1 },
+        { q: "Cơ quan nào quản lý người sử dụng trái phép chất ma túy tại địa phương?", options: ["UBND và Công an cấp xã", "Bệnh viện", "Trường học", "Hội phụ nữ"], correct: 0 }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hearts = 10;
+    let shuffledQuestions = [];
+
+    function startGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        hearts = 10;
+        
+        // Xáo trộn danh sách câu hỏi
+        shuffledQuestions = shuffle([...questionsData]); 
+        
+        // Xáo trộn đáp án của từng câu hỏi
+        shuffledQuestions.forEach(item => {
+            let optionsSet = item.options.map((text, index) => ({ text, isCorrect: index === item.correct }));
+            shuffle(optionsSet);
+            item.shuffledOptions = optionsSet.map(o => o.text);
+            item.shuffledCorrectIndex = optionsSet.findIndex(o => o.isCorrect);
+        });
+
+        renderHearts();
+        loadQuestion();
+        showScreen('quiz-screen');
+    }
+
+    function renderHearts() {
+        const heartsDiv = document.getElementById('hearts');
+        heartsDiv.innerHTML = '';
+        for(let i=0; i<hearts; i++) {
+            const span = document.createElement('span');
+            span.innerText = '❤️';
+            span.id = `heart-${i}`;
+            heartsDiv.appendChild(span);
+        }
+    }
+
+    function loadQuestion() {
+        const currentQ = shuffledQuestions[currentQuestionIndex];
+        const optionsContainer = document.getElementById('options-container');
+        document.getElementById('next-btn').style.display = 'none';
+        optionsContainer.innerHTML = '';
+        
+        document.getElementById('q-count').innerText = `${currentQuestionIndex + 1}/50`;
+        document.getElementById('question-text').innerText = currentQ.q;
+        document.getElementById('progress-fill').style.width = `${(currentQuestionIndex / 50) * 100}%`;
+
+        currentQ.shuffledOptions.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, idx);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedBtn, selectedIdx) {
+        const currentQ = shuffledQuestions[currentQuestionIndex];
+        const correctIdx = currentQ.shuffledCorrectIndex;
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIdx === correctIdx) {
+            selectedBtn.classList.add('correct');
+            score++;
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            selectedBtn.classList.add('wrong');
+            allBtns[correctIdx].classList.add('correct');
+            
+            const lastHeart = document.getElementById(`heart-${hearts - 1}`);
+            if (lastHeart) {
+                lastHeart.classList.add('heart-blink');
+                
+                setTimeout(() => {
+                    hearts--;
+                    renderHearts();
+                    if (hearts <= 0) {
+                        showGameOver();
+                    } else {
+                        document.getElementById('next-btn').style.display = 'block';
+                    }
+                }, 900);
+            }
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        // Kiểm tra nếu đạt tới 50 câu (hoặc hết mảng)
+        if (currentQuestionIndex < 50 && currentQuestionIndex < shuffledQuestions.length) {
+            loadQuestion();
+        } else {
+            showFinalResult();
+        }
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function showGameOver() {
+        document.getElementById('fail-score-text').innerText = `Bạn đã trả lời đúng được ${score} câu.`;
+        showScreen('game-over-screen');
+    }
+
+    function showFinalResult() {
+        document.getElementById('score-display').innerText = `${score}/50`;
+        let msg = "";
+        if (score >= 45) msg = "Tuyệt vời! Bạn là một chiến sĩ phòng chống ma túy thực thụ.";
+        else if (score >= 30) msg = "Rất tốt! Bạn nắm khá vững kiến thức pháp luật.";
+        else msg = "Bạn đã hoàn thành, nhưng cần tìm hiểu thêm để bảo vệ bản thân.";
+        
+        document.getElementById('score-message').innerText = msg;
+        showScreen('result-screen');
+    }
+</script>
+</body>
+</html>
