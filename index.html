@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Shadow Hunter - Ultimate Evolution</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; }
+        #ui-overlay {
+            position: absolute; top: 20px; width: 100%;
+            color: white; pointer-events: none;
+            text-shadow: 2px 2px 4px #000; font-family: 'Courier New', monospace;
+        }
+        .stat-right { position: absolute; right: 20px; top: 0; text-align: right; font-size: 18px; }
+        .wave-center { position: absolute; left: 50%; transform: translateX(-50%); font-size: 32px; color: #ffcc00; font-weight: bold; letter-spacing: 2px; }
+        
+        /* CSS cho các nút bấm và màn hình */
+        .game-btn {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            padding: 15px 40px; font-size: 24px; font-weight: bold;
+            background: #00ffff; color: #000; border: none; cursor: pointer;
+            border-radius: 5px; box-shadow: 0 0 20px #00ffff;
+            transition: 0.3s; pointer-events: auto;
+        }
+        .game-btn:hover { background: #fff; box-shadow: 0 0 40px #fff; transform: translateX(-50%) scale(1.1); }
+        
+        #start-screen, #death-screen {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.85); 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; /* Đưa tất cả nội dung vào giữa màn hình */
+            color: white; 
+            z-index: 10;
+        }
+        #death-screen { display: none; background: rgba(50, 0, 0, 0.9); }
+        .controls { margin-top: 20px; color: #aaa; text-align: center; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div id="ui-overlay">
+    <div class="wave-center">WAVE <span id="wave-num">1</span></div>
+    <div class="stat-right">
+        TIME: <span id="timer">00:00</span><br>
+        KILLS: <span id="kill-count">0</span>
+    </div>
+</div>
+
+<div id="start-screen">
+    <h1 style="font-size: 60px; color: #00ffff; margin-bottom: 10px;">SHADOW HUNTER</h1>
+    <p style="color: #ffcc00; letter-spacing: 5px;">ULTIMATE EVOLUTION</p>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <button class="game-btn" onclick="startGame()">BẮT ĐẦU</button>
+    <div class="controls">
+        Di chuyển: <b>WASD</b> | Bắn: <b>Chuột trái</b><br>
+        Kỹ năng: <b>Phím 1, 2, 3</b>
+    </div>
+</div>
+
+<div id="death-screen">
+    <h1 style="font-size: 50px; color: #ff4444;">BẠN ĐÃ TỬ TRẬN</h1>
+    <div id="final-stats" style="text-align: center; font-size: 20px; margin: 20px 0;"></div>
+    <button class="game-btn" onclick="resetGame()">CHƠI LẠI</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+/* ================= SETUP ================= */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const timerEl = document.getElementById("timer");
+const killEl = document.getElementById("kill-count");
+const waveEl = document.getElementById("wave-num");
+
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+window.onresize = resize; resize();
+
+let gameState = "MENU"; 
+let startTime, kills, currentWave, enemiesToSpawn, enemiesRemaining;
+let player, bullets, enemies, particles, damageTexts, shakeTime;
+
+/* ================= INITIALIZE / RESET ================= */
+function initGame() {
+    startTime = Date.now();
+    kills = 0;
+    currentWave = 1;
+    shakeTime = 0;
+    bullets = []; enemies = []; particles = []; damageTexts = [];
+    
+    player = {
+        x: 1500, y: 1500, r: 18,
+        angle: 0, speed: 3.8,
+        level: 1, exp: 0, expNext: 100,
+        maxHp: 200, hp: 200, damage: 35
+    };
+    
+    killEl.innerText = "0";
+    startNextWave();
+}
+
+function startGame() {
+    document.getElementById("start-screen").style.display = "none";
+    initGame();
+    gameState = "PLAYING";
+}
+
+function resetGame() {
+    document.getElementById("death-screen").style.display = "none";
+    initGame();
+    gameState = "PLAYING";
+}
+
+function gameOver() {
+    gameState = "GAMEOVER";
+    const finalTime = formatTime(Date.now() - startTime);
+    document.getElementById("death-screen").style.display = "flex";
+    document.getElementById("final-stats").innerHTML = `
+        <p>Wave đạt được: <b style="color:#ffcc00">${currentWave}</b></p>
+        <p>Kẻ địch hạ gục: <b style="color:#ffcc00">${kills}</b></p>
+        <p>Thời gian sống sót: <b style="color:#ffcc00">${finalTime}</b></p>
+    `;
+}
+
+/* ================= LOGIC GAME ================= */
+const camera = { x: 0, y: 0, lerp: 0.1 };
+const MONSTER_TYPES = [
+    { name: "Slime", r: 14, hp: 40, speed: 1.2, exp: 20, color: "#44ff44", chance: 0.4 },
+    { name: "Goblin", r: 20, hp: 80, speed: 2.0, exp: 50, color: "#ffaa00", chance: 0.7 },
+    { name: "Wolf", r: 18, hp: 60, speed: 3.2, exp: 60, color: "#aaaaaa", chance: 0.85 },
+    { name: "Ogre", r: 35, hp: 300, speed: 1.0, exp: 200, color: "#8844ff", chance: 0.95 },
+    { name: "Boss", r: 55, hp: 1500, speed: 1.5, exp: 1000, color: "#ff0000", chance: 1.0 }
+];
+
+const skills = {
+    basic: { cd: 200, last: 0, color: "#ffcc00" },
+    s1: { cd: 800, last: 0, color: "#00ffcc" },
+    s2: { cd: 3000, last: 0, color: "#ff4400" },
+    s3: { cd: 5000, last: 0, color: "#aa00ff" }
+};
+
+const keys = {}, mouse = { x: 0, y: 0, wx: 0, wy: 0, down: false };
+onkeydown = e => keys[e.code] = true;
+onkeyup = e => keys[e.code] = false;
+onmousemove = e => {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    mouse.wx = mouse.x + camera.x; mouse.wy = mouse.y + camera.y;
+};
+onmousedown = e => { if (e.button === 0) mouse.down = true; };
+onmouseup = e => { if (e.button === 0) mouse.down = false; };
+
+class Particle {
+    constructor(x, y, color, speed = 6) {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * speed;
+        this.vy = (Math.random() - 0.5) * speed;
+        this.life = 1.0; this.color = color;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life -= 0.02; }
+}
+
+function startNextWave() {
+    enemiesToSpawn = 10 + (currentWave * 5);
+    enemiesRemaining = enemiesToSpawn;
+    waveEl.innerText = currentWave;
+    if (player) {
+        damageTexts.push({x: player.x, y: player.y - 100, val: "WAVE " + currentWave, life: 2, color: "#ffcc00", size: 40});
+    }
+}
+
+function spawnEnemy() {
+    if (gameState !== "PLAYING" || enemiesToSpawn <= 0) return;
+    const rand = Math.random();
+    let type = MONSTER_TYPES[0];
+    for (const t of MONSTER_TYPES) { if (rand < t.chance) { type = t; break; } }
+    
+    const waveMult = 1 + (currentWave - 1) * 0.3;
+    const a = Math.random() * 6.28;
+    const spawnDist = 800;
+    
+    enemies.push({
+        ...type,
+        x: player.x + Math.cos(a) * spawnDist, 
+        y: player.y + Math.sin(a) * spawnDist,
+        hp: type.hp * waveMult, 
+        maxHp: type.hp * waveMult,
+        dmg: (type.r / 5) * waveMult, 
+        expReward: Math.floor(type.exp * waveMult),
+        speed: type.speed + (currentWave * 0.05)
+    });
+    enemiesToSpawn--;
+}
+
+function shoot(dmg, color, size = 6, angleOffset = 0) {
+    const a = Math.atan2(mouse.wy - player.y, mouse.wx - player.x) + angleOffset;
+    bullets.push({ x: player.x, y: player.y, vx: Math.cos(a) * 15, vy: Math.sin(a) * 15, dmg, size, color, dist: 0 });
+}
+
+function formatTime(ms) {
+    let s = Math.floor(ms / 1000);
+    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+}
+
+function gainExp(v) {
+    player.exp += v;
+    while (player.exp >= player.expNext) {
+        player.exp -= player.expNext; 
+        player.level++; 
+        player.expNext = Math.floor(player.expNext * 1.5);
+        player.maxHp += 50; 
+        player.hp = player.maxHp; 
+        player.damage += 10;
+        damageTexts.push({x: player.x, y: player.y, val: "LEVEL UP!", life: 1.5, color: "#00ffff", size: 24});
+    }
+}
+
+/* ================= UPDATE & DRAW ================= */
+function update() {
+    if (gameState !== "PLAYING") return;
+
+    timerEl.innerText = formatTime(Date.now() - startTime);
+    if (enemiesRemaining <= 0 && enemies.length === 0) { currentWave++; startNextWave(); }
+
+    // Di chuyển
+    let mx = 0, my = 0;
+    if (keys.KeyW) my--; if (keys.KeyS) my++; if (keys.KeyA) mx--; if (keys.KeyD) mx++;
+    if (mx || my) {
+        const l = Math.hypot(mx, my);
+        player.x += mx / l * player.speed; player.y += my / l * player.speed;
+    }
+    player.angle = Math.atan2(mouse.wy - player.y, mouse.wx - player.x);
+    
+    // Camera Lerp
+    camera.x += (player.x - canvas.width / 2 - camera.x) * camera.lerp;
+    camera.y += (player.y - canvas.height / 2 - camera.y) * camera.lerp;
+    
+    if (shakeTime > 0) { 
+        camera.x += (Math.random()-0.5)*15; 
+        camera.y += (Math.random()-0.5)*15; 
+        shakeTime--; 
+    }
+
+    // Skills logic
+    const t = Date.now();
+    if (mouse.down && t - skills.basic.last > skills.basic.cd) { shoot(player.damage, skills.basic.color); skills.basic.last = t; }
+    if (keys.Digit1 && t - skills.s1.last > skills.s1.cd) { for (let i=-0.3; i<=0.3; i+=0.3) shoot(player.damage, skills.s1.color, 6, i); skills.s1.last = t; }
+    if (keys.Digit2 && t - skills.s2.last > skills.s2.cd) {
+        for (let i=0; i<16; i++) bullets.push({ x: player.x, y: player.y, vx: Math.cos(i*Math.PI/8)*11, vy: Math.sin(i*Math.PI/8)*11, dmg: player.damage*2, size: 8, color: skills.s2.color, dist: 0 });
+        shakeTime = 10; skills.s2.last = t;
+    }
+    if (keys.Digit3 && t - skills.s3.last > skills.s3.cd) {
+        const dist = Math.min(Math.hypot(mouse.wx-player.x, mouse.wy-player.y), 350);
+        const ang = Math.atan2(mouse.wy-player.y, mouse.wx-player.x);
+        // Teleport effect
+        for(let i=0; i<15; i++) particles.push(new Particle(player.x, player.y, "#fff", 8));
+        player.x += Math.cos(ang)*dist; player.y += Math.sin(ang)*dist;
+        for(let i=0; i<15; i++) particles.push(new Particle(player.x, player.y, "#fff", 8));
+        
+        enemies.forEach(e => { if(Math.hypot(player.x-e.x, player.y-e.y) < 180) e.hp = Math.max(0, e.hp - player.damage*5); });
+        shakeTime = 15; skills.s3.last = t;
+    }
+
+    // Xử lý đạn
+    bullets.forEach((b, i) => { 
+        b.x += b.vx; b.y += b.vy; b.dist += 15; 
+        if (b.dist > 1000) bullets.splice(i, 1); 
+    });
+
+    // Xử lý quái vật
+    enemies.forEach((e, ei) => {
+        const d = Math.hypot(player.x - e.x, player.y - e.y);
+        e.x += (player.x - e.x) / d * e.speed; 
+        e.y += (player.y - e.y) / d * e.speed;
+        
+        if (d < e.r + player.r) {
+            player.hp = Math.max(0, player.hp - (e.dmg / 20));
+            if (player.hp <= 0) gameOver();
+        }
+        
+        bullets.forEach((b, bi) => {
+            if (Math.hypot(e.x - b.x, e.y - b.y) < e.r + b.size) {
+                e.hp = Math.max(0, e.hp - b.dmg); 
+                bullets.splice(bi, 1);
+                if (e.hp <= 0) {
+                    // Hiệu ứng chết
+                    for(let p=0; p<10; p++) particles.push(new Particle(e.x, e.y, e.color));
+                    enemies.splice(ei, 1); 
+                    kills++; 
+                    enemiesRemaining--; 
+                    killEl.innerText = kills;
+                    gainExp(e.expReward);
+                }
+            }
+        });
+    });
+    
+    particles.forEach((p, i) => { p.update(); if (p.life <= 0) particles.splice(i, 1); });
+    damageTexts.forEach((dt, i) => { dt.y -= 1; dt.life -= 0.02; if (dt.life <= 0) damageTexts.splice(i, 1); });
+}
+
+function draw() {
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === "MENU") return;
+
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    // Vẽ hạt hiệu ứng
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 4, 4);
+    });
+    ctx.globalAlpha = 1;
+
+    // Vẽ đạn
+    bullets.forEach(b => { 
+        ctx.fillStyle = b.color; 
+        ctx.shadowBlur = 10; ctx.shadowColor = b.color;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, 6.28); ctx.fill(); 
+        ctx.shadowBlur = 0;
+    });
+
+    // Vẽ quái vật
+    enemies.forEach(e => {
+        ctx.fillStyle = e.color; 
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 6.28); ctx.fill();
+        // Thanh máu quái
+        ctx.fillStyle = "#000"; ctx.fillRect(e.x-20, e.y-e.r-12, 40, 5);
+        ctx.fillStyle = "#f00"; ctx.fillRect(e.x-20, e.y-e.r-12, 40*(e.hp/e.maxHp), 5);
+    });
+
+    // Vẽ người chơi
+    if (gameState === "PLAYING") {
+        ctx.save(); 
+        ctx.translate(player.x, player.y); 
+        ctx.rotate(player.angle);
+        ctx.fillStyle = "#0ff"; 
+        ctx.shadowBlur = 15; ctx.shadowColor = "#0ff";
+        ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(-15, -15); ctx.lineTo(-15, 15); ctx.fill(); 
+        ctx.restore();
+    }
+
+    // Vẽ sát thương/text
+    damageTexts.forEach(dt => {
+        ctx.fillStyle = dt.color; ctx.globalAlpha = dt.life; ctx.font = `bold ${dt.size || 16}px Arial`;
+        ctx.textAlign = "center"; ctx.fillText(dt.val, dt.x, dt.y);
+    });
+    ctx.globalAlpha = 1; 
+    ctx.restore();
+
+    // Vẽ HUD (Giao diện người chơi)
+    if (gameState === "PLAYING") {
+        const h = canvas.height;
+        ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(0, h-80, canvas.width, 80);
+        
+        // HP Bar
+        ctx.fillStyle = "#333"; ctx.fillRect(30, h-55, 250, 22);
+        ctx.fillStyle = "#f36"; ctx.fillRect(30, h-55, 250*(Math.max(0,player.hp)/player.maxHp), 22);
+        ctx.fillStyle = "white"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center";
+        ctx.fillText(`${Math.ceil(player.hp)} / ${player.maxHp}`, 155, h-39);
+        
+        // EXP Bar
+        ctx.fillStyle = "#333"; ctx.fillRect(30, h-22, 250, 8);
+        ctx.fillStyle = "#fd0"; ctx.fillRect(30, h-22, 250*(player.exp/player.expNext), 8);
+        
+        // Info
+        ctx.fillStyle = "#fff"; ctx.font = "bold 15px Arial"; ctx.textAlign = "left";
+        ctx.fillText(`LV. ${player.level} | ATK: ${player.damage}`, 30, h-65);
+        
+        // Skills CD
+        const t = Date.now();
+        let i = 0;
+        for(let k in skills) {
+            const s = skills[k];
+            const cd = Math.max(0, 1 - (t - s.last) / s.cd);
+            const sx = canvas.width/2 - 80 + i*45;
+            const sy = h - 60;
+            ctx.fillStyle = s.color;
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(sx, sy, 38, 38);
+            ctx.globalAlpha = 1;
+            if(cd > 0) {
+                ctx.fillStyle = "rgba(0,0,0,0.7)";
+                ctx.fillRect(sx, sy, 38, 38 * cd);
+            }
+            ctx.strokeStyle = cd === 0 ? s.color : "#555";
+            ctx.strokeRect(sx, sy, 38, 38);
+            i++;
+        }
+    }
+}
+
+/* ================= LOOP ================= */
+setInterval(spawnEnemy, 400);
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
