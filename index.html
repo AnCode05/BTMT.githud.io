@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cyber TFT - Ultimate Edition</title>
+    <style>
+      :root {
+        --gold: #f59e0b;
+        --bg: #020617;
+        --panel: #1e293b;
+        --blue: #3b82f6;
+        --green: #22c55e;
+        --red: #ef4444;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: white;
+        font-family: "Segoe UI", sans-serif;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #header {
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        background: rgba(15, 23, 42, 0.9);
+        border-bottom: 2px solid #334155;
+        z-index: 10;
+      }
+      .stat {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+      .gold-ui {
+        color: var(--gold);
+      }
+      .hp-ui {
+        color: var(--red);
+      }
+
+      #game-container {
+        position: relative;
+        cursor: grab;
+      }
+      canvas {
+        background: #020617;
+        touch-action: none;
+        display: block;
+      }
+
+      #controls {
+        margin: 10px;
+        display: flex;
+        gap: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn-roll {
+        background: var(--blue);
+        color: white;
+      }
+      .btn-start {
+        background: var(--green);
+        color: white;
+      }
+      button:hover {
+        filter: brightness(1.2);
+        transform: translateY(-2px);
+      }
+
+      #shop {
+        width: 100%;
+        max-width: 600px;
+        height: 110px;
+        background: var(--panel);
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        box-sizing: border-box;
+        border-radius: 8px 8px 0 0;
+      }
+      .shop-slot {
+        flex: 1;
+        border: 2px solid #334155;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0f172a;
+        cursor: pointer;
+      }
+      .shop-slot:hover {
+        border-color: var(--gold);
+        background: #1e293b;
+      }
+      .shop-slot b {
+        font-size: 0.9rem;
+      }
+      .shop-slot span {
+        color: var(--gold);
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+      <div class="stat gold-ui">💰 <span id="gold-val">10</span></div>
+      <div id="stage-ui">STAGE 1-1</div>
+      <div class="stat hp-ui">❤️ <span id="hp-val">100</span></div>
+    </div>
+
+    <div id="game-container">
+      <canvas id="tftCanvas"></canvas>
+    </div>
+
+    <div id="controls">
+      <button class="btn-roll" onclick="gameShop.roll()">Roll (2G)</button>
+      <button class="btn-start" id="start-btn" onclick="startBattle()">
+        BẮT ĐẦU CHIẾN ĐẤU
+      </button>
+    </div>
+
+    <div id="shop"></div>
+
+    <script>
+      /* --- CẤU HÌNH DỮ LIỆU --- */
+      const GRID_SIZE = 70;
+      const COLS = 7,
+        ROWS = 8;
+      const BENCH_ROW = 7;
+      const UNIT_DATA = {
+        Warrior: {
+          hp: 800,
+          atk: 55,
+          range: 1,
+          color: "#60a5fa",
+          cost: 1,
+          crit: 0.25,
+        },
+        Ranger: {
+          hp: 450,
+          atk: 65,
+          range: 4,
+          color: "#fbbf24",
+          cost: 1,
+          crit: 0.4,
+        },
+        Mage: {
+          hp: 550,
+          atk: 75,
+          range: 3,
+          color: "#a78bfa",
+          cost: 2,
+          crit: 0.15,
+        },
+        Tank: {
+          hp: 1200,
+          atk: 35,
+          range: 1,
+          color: "#f87171",
+          cost: 3,
+          crit: 0.1,
+        },
+      };
+
+      let gold = 10,
+        hp = 100,
+        stage = 1,
+        subStage = 1;
+      let units = [],
+        particles = [];
+      let gameState = "PREP";
+      let dragUnit = null;
+      let mouseX = 0,
+        mouseY = 0;
+
+      const canvas = document.getElementById("tftCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = COLS * GRID_SIZE;
+      canvas.height = ROWS * GRID_SIZE;
+
+      /* --- LỚP TƯỚNG (UNIT CLASS) --- */
+      class Unit {
+        constructor(name, x, y, team) {
+          let d = UNIT_DATA[name];
+          this.name = name;
+          this.team = team;
+          this.gridX = x;
+          this.gridY = y;
+          this.x = x * GRID_SIZE + GRID_SIZE / 2;
+          this.y = y * GRID_SIZE + GRID_SIZE / 2;
+          this.hp = d.hp;
+          this.maxHp = d.hp;
+          this.atk = d.atk;
+          this.range = d.range;
+          this.color = d.color;
+          this.critChance = d.crit;
+          this.shield = 0;
+          this.star = 1;
+          this.mana = 0;
+          this.maxMana = 100;
+          this.lastAtk = 0;
+          this.target = null;
+          this.isHovered = false;
+        }
+
+        draw() {
+          let r = 22 + this.star * 3;
+
+          // Glow hiệu ứng khi hover
+          if (this.isHovered) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "white";
+          }
+
+          // Body
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.strokeStyle = this.isHovered
+            ? "yellow"
+            : this.team === "player"
+            ? "white"
+            : "#ff4444";
+          ctx.lineWidth = this.isHovered ? 4 : 3;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Thanh HP & Shield
+          const barW = 50,
+            barH = 6,
+            xOff = this.x - 25,
+            yOff = this.y - 38;
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(xOff, yOff, barW, barH);
+
+          // Máu
+          ctx.fillStyle = this.team === "player" ? "#22c55e" : "#ef4444";
+          ctx.fillRect(xOff, yOff, barW * (this.hp / this.maxHp), barH);
+
+          // Shield (màu bạc)
+          if (this.shield > 0) {
+            ctx.fillStyle = "#cbd5e1";
+            ctx.fillRect(
+              xOff,
+              yOff,
+              barW * (this.shield / this.maxHp),
+              barH / 2
+            );
+          }
+
+          // Mana
+          if (this.maxMana > 0) {
+            ctx.fillStyle = "#3b82f6";
+            ctx.fillRect(xOff, yOff + 7, barW * (this.mana / this.maxMana), 3);
+          }
+
+          // Sao
+          ctx.fillStyle = "white";
+          ctx.font = "bold 12px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("★".repeat(this.star), this.x, this.y - 42);
+
+          if (this.isHovered) this.drawTooltip();
+        }
+
+        drawTooltip() {
+          const tX = this.x + 35,
+            tY = this.y - 100;
+          const lines = [
+            {
+              label: this.name.toUpperCase(),
+              val: "★".repeat(this.star),
+              c: "#fbbf24",
+            },
+            {
+              label: "Máu:",
+              val: `${Math.floor(this.hp)}/${this.maxHp}`,
+              c: "#22c55e",
+            },
+            { label: "Sát thương:", val: this.atk, c: "#f87171" },
+            {
+              label: "Mana:",
+              val: `${this.mana}/${this.maxMana}`,
+              c: "#3b82f6",
+            },
+            {
+              label: "Chí mạng:",
+              val: this.critChance * 100 + "%",
+              c: "#f59e0b",
+            },
+            { label: "Khiên:", val: Math.floor(this.shield), c: "#cbd5e1" },
+          ];
+
+          ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 2;
+          ctx.fillRect(tX, tY, 150, 110);
+          ctx.strokeRect(tX, tY, 150, 110);
+
+          ctx.textAlign = "left";
+          ctx.font = "bold 11px Arial";
+          lines.forEach((l, i) => {
+            ctx.fillStyle = "white";
+            ctx.fillText(l.label, tX + 10, tY + 20 + i * 16);
+            ctx.fillStyle = l.c;
+            ctx.fillText(l.val, tX + 85, tY + 20 + i * 16);
+          });
+        }
+
+        update(enemies) {
+          if (gameState !== "COMBAT" || this.hp <= 0) return;
+
+          if (!this.target || this.target.hp <= 0) {
+            this.target = enemies.reduce((prev, curr) => {
+              let d1 = Math.hypot(this.x - prev.x, this.y - prev.y);
+              let d2 = Math.hypot(this.x - curr.x, this.y - curr.y);
+              return d1 < d2 ? prev : curr;
+            }, enemies[0]);
+          }
+
+          if (this.target) {
+            let d = Math.hypot(this.x - this.target.x, this.y - this.target.y);
+            if (d <= this.range * GRID_SIZE) {
+              if (Date.now() - this.lastAtk > 1000) {
+                let damage = this.atk;
+                if (Math.random() < this.critChance) damage *= 2; // Chí mạng x2
+
+                // Trừ khiên trước, máu sau
+                if (this.target.shield > 0) {
+                  this.target.shield -= damage;
+                  if (this.target.shield < 0) {
+                    this.target.hp += this.target.shield;
+                    this.target.shield = 0;
+                  }
+                } else {
+                  this.target.hp -= damage;
+                }
+
+                this.mana = Math.min(this.maxMana, this.mana + 20);
+                this.lastAtk = Date.now();
+                createHitEffect(this.target.x, this.target.y, this.color);
+                if (this.mana >= this.maxMana) this.cast();
+              }
+            } else {
+              let angle = Math.atan2(
+                this.target.y - this.y,
+                this.target.x - this.x
+              );
+              this.x += Math.cos(angle) * 2;
+              this.y += Math.sin(angle) * 2;
+            }
+          }
+        }
+
+        cast() {
+          this.mana = 0;
+          this.shield += 200; // Skill mặc định: Buff khiên
+          units.forEach((u) => {
+            if (
+              u.team !== this.team &&
+              Math.hypot(this.x - u.x, this.y - u.y) < 150
+            ) {
+              u.hp -= this.atk * 1.5;
+            }
+          });
+          createHitEffect(this.x, this.y, "white", 20);
+        }
+      }
+
+      /* --- SHOP --- */
+      const gameShop = {
+        slots: [],
+        roll() {
+          if (gold < 2) return;
+          gold -= 2;
+          this.slots = Array(5)
+            .fill(0)
+            .map(() => {
+              const keys = Object.keys(UNIT_DATA);
+              return keys[Math.floor(Math.random() * keys.length)];
+            });
+          this.render();
+          updateUI();
+        },
+        buy(idx) {
+          let name = this.slots[idx];
+          if (!name || gold < UNIT_DATA[name].cost) return;
+          for (let i = 0; i < COLS; i++) {
+            if (!units.find((u) => u.gridX === i && u.gridY === BENCH_ROW)) {
+              gold -= UNIT_DATA[name].cost;
+              units.push(new Unit(name, i, BENCH_ROW, "player"));
+              this.slots[idx] = null;
+              checkUpgrades();
+              this.render();
+              updateUI();
+              return;
+            }
+          }
+        },
+        render() {
+          const container = document.getElementById("shop");
+          container.innerHTML = this.slots
+            .map((s, i) =>
+              s
+                ? `<div class="shop-slot" onclick="gameShop.buy(${i})"><b>${s}</b><span>${UNIT_DATA[s].cost}G</span></div>`
+                : `<div class="shop-slot" style="opacity:0.3">Empty</div>`
+            )
+            .join("");
+        },
+      };
+
+      function checkUpgrades() {
+        let counts = {};
+        units
+          .filter((u) => u.team === "player" && u.star < 3)
+          .forEach((u) => {
+            let id = u.name + u.star;
+            counts[id] = (counts[id] || 0) + 1;
+            if (counts[id] >= 3) {
+              let removeCount = 3;
+              units = units.filter((unit) => {
+                if (
+                  unit.name === u.name &&
+                  unit.star === u.star &&
+                  removeCount > 0
+                ) {
+                  removeCount--;
+                  return false;
+                }
+                return true;
+              });
+              let upgraded = new Unit(u.name, u.gridX, u.gridY, "player");
+              upgraded.star = u.star + 1;
+              upgraded.maxHp *= 1.8;
+              upgraded.hp = upgraded.maxHp;
+              upgraded.atk *= 1.5;
+              units.push(upgraded);
+              checkUpgrades();
+            }
+          });
+      }
+
+      /* --- CORE --- */
+      function startBattle() {
+        if (gameState === "COMBAT") return;
+        units = units.filter((u) => u.team !== "enemy");
+        let count = Math.min(stage + 1, 7);
+        for (let i = 0; i < count; i++) {
+          let names = Object.keys(UNIT_DATA);
+          let u = new Unit(
+            names[Math.floor(Math.random() * names.length)],
+            i,
+            Math.floor(Math.random() * 3),
+            "enemy"
+          );
+          if (stage >= 3) u.star = 2;
+          units.push(u);
+        }
+        gameState = "COMBAT";
+        document.getElementById("start-btn").disabled = true;
+      }
+
+      function endBattle(winner) {
+        gameState = "PREP";
+        if (winner === "enemy") hp -= 15;
+        gold += 5 + Math.floor(gold / 10);
+        subStage++;
+        if (subStage > 4) {
+          subStage = 1;
+          stage++;
+        }
+        units.forEach((u) => {
+          u.hp = u.maxHp;
+          u.mana = 0;
+          u.shield = 0;
+          u.x = u.gridX * GRID_SIZE + GRID_SIZE / 2;
+          u.y = u.gridY * GRID_SIZE + GRID_SIZE / 2;
+        });
+        document.getElementById("start-btn").disabled = false;
+        gameShop.roll();
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        if (gameState !== "PREP") return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left,
+          my = e.clientY - rect.top;
+        dragUnit = units.find(
+          (u) => u.team === "player" && Math.hypot(u.x - mx, u.y - my) < 30
+        );
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+
+        units.forEach(
+          (u) => (u.isHovered = Math.hypot(u.x - mouseX, u.y - mouseY) < 25)
+        );
+
+        if (dragUnit) {
+          dragUnit.x = mouseX;
+          dragUnit.y = mouseY;
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (dragUnit) {
+          let gx = Math.floor(dragUnit.x / GRID_SIZE);
+          let gy = Math.floor(dragUnit.y / GRID_SIZE);
+          if (gy >= 4 && gx >= 0 && gx < COLS) {
+            dragUnit.gridX = gx;
+            dragUnit.gridY = gy;
+          }
+          dragUnit.x = dragUnit.gridX * GRID_SIZE + GRID_SIZE / 2;
+          dragUnit.y = dragUnit.gridY * GRID_SIZE + GRID_SIZE / 2;
+          dragUnit = null;
+        }
+      });
+
+      function createHitEffect(x, y, color) {
+        for (let i = 0; i < 6; i++) {
+          particles.push({
+            x,
+            y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1,
+            color,
+          });
+        }
+      }
+
+      function updateUI() {
+        document.getElementById("gold-val").innerText = gold;
+        document.getElementById("hp-val").innerText = hp;
+        document.getElementById(
+          "stage-ui"
+        ).innerText = `STAGE ${stage}-${subStage}`;
+      }
+
+      function animate() {
+        // Vẽ nền giả lập board
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Vẽ ô bàn cờ (Chessboard Effect)
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            ctx.fillStyle =
+              (r + c) % 2 === 0 ? "rgba(30, 41, 59, 0.3)" : "transparent";
+            ctx.fillRect(c * GRID_SIZE, r * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+          }
+        }
+
+        // Kẻ vạch ngăn cách
+        ctx.strokeStyle = "#334155";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 4 * GRID_SIZE);
+        ctx.lineTo(canvas.width, 4 * GRID_SIZE);
+        ctx.stroke();
+
+        let pTeam = units.filter((u) => u.team === "player" && u.hp > 0);
+        let eTeam = units.filter((u) => u.team === "enemy" && u.hp > 0);
+
+        units.forEach((u) => {
+          if (u.hp > 0) {
+            if (u !== dragUnit) u.update(u.team === "player" ? eTeam : pTeam);
+            u.draw();
+          }
+        });
+
+        if (gameState === "COMBAT") {
+          if (eTeam.length === 0) endBattle("player");
+          else if (pTeam.length === 0) endBattle("enemy");
+        }
+
+        particles = particles.filter((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.05;
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.fillRect(p.x, p.y, 3, 3);
+          ctx.globalAlpha = 1;
+          return p.life > 0;
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      gameShop.roll();
+      updateUI();
+      animate();
+    </script>
+  </body>
+</html>
