@@ -3,32 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ôn tập Văn minh Đại Việt - Đầy đủ 60 câu</title>
+    <title>Ôn tập Văn minh Đại Việt - Phản hồi tức thì</title>
     <style>
-        :root { --primary: #8b4513; --bg: #f4f1ea; --card: #ffffff; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: #333; line-height: 1.6; padding: 20px; }
+        :root { 
+            --primary: #8b4513; 
+            --bg: #f4f1ea; 
+            --card: #ffffff;
+            --correct-bg: #d4edda;
+            --correct-text: #155724;
+            --wrong-bg: #f8d7da;
+            --wrong-text: #721c24;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: #333; line-height: 1.6; padding: 20px; margin-top: 80px; }
+        
+        /* Taskbar cố định phía trên */
+        .taskbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
         .container { max-width: 900px; margin: auto; background: var(--card); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--primary); }
-        .question-card { margin-bottom: 20px; padding: 15px; border-left: 5px solid var(--primary); background: #fafafa; border-radius: 4px; }
-        .question-text { font-weight: bold; display: block; margin-bottom: 10px; }
-        .option-item { margin-bottom: 5px; cursor: pointer; display: block; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; }
-        #result { margin-top: 20px; font-weight: bold; font-size: 1.3em; text-align: center; color: #27ae60; position: sticky; bottom: 20px; background: white; padding: 10px; border: 2px solid var(--primary); display: none; }
+        
+        .question-card { margin-bottom: 20px; padding: 20px; border-left: 5px solid var(--primary); background: #fafafa; border-radius: 4px; transition: 0.3s; }
+        .question-text { font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1em; }
+        
+        .options-container { display: flex; flex-direction: column; gap: 10px; }
+        .option-item { 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            background: white;
+        }
+        .option-item:hover:not(.disabled) { background: #eee; }
+        .option-item.disabled { cursor: not-allowed; }
+
+        /* Màu sắc đúng sai */
+        .option-item.correct-choice { background-color: var(--correct-bg) !important; border-color: #c3e6cb !important; color: var(--correct-text) !important; font-weight: bold; }
+        .option-item.wrong-choice { background-color: var(--wrong-bg) !important; border-color: #f5c6cb !important; color: var(--wrong-text) !important; }
+
+        .btn-reset { background: white; color: var(--primary); border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-reset:hover { background: #eee; }
     </style>
 </head>
 <body>
 
+<div class="taskbar">
+    <span>Đúng: <span id="count-correct">0</span></span>
+    <span>Sai: <span id="count-wrong">0</span></span>
+    <span>Tiến độ: <span id="count-total">0</span>/60</span>
+    <button class="btn-reset" onclick="location.reload()">Làm đề mới</button>
+</div>
+
 <div class="container">
-    <h1>Hệ Thống Ôn Tập: Văn Minh Đại Việt (60 Câu)</h1>
+    <h1>Ôn Tập Văn Minh Đại Việt</h1>
     <div id="quiz-container"></div>
-    <div style="text-align: center;">
-        <button onclick="checkAnswers()">Nộp bài & Xem kết quả</button>
-        <button style="background:#555" onclick="location.reload()">Làm bộ đề mới (Xáo câu)</button>
-    </div>
-    <div id="result"></div>
 </div>
 
 <script>
+// Dữ liệu câu hỏi (Giữ nguyên từ yêu cầu trước của bạn)
 const mcqData = [
     { q: "Văn minh Đại Việt tồn tại trong khoảng thời gian nào?", a: ["Từ thế kỉ X đến giữa thế kỉ XIX.", "Từ thế kỉ X đến cuối thế kỉ XIX.", "Từ thế kỉ XI đến đầu thế kỉ XX.", "Từ thời sơ sử đến thế kỉ X."], c: 0 },
     { q: "Nền tảng quan trọng nhất hình thành văn minh Đại Việt là gì?", a: ["Văn minh Văn Lang - Âu Lạc.", "Văn minh Trung Hoa.", "Văn minh Ấn Độ.", "Văn minh phương Tây."], c: 0 },
@@ -95,6 +140,16 @@ const tfData = [
     { q: "Văn minh Đại Việt kết thúc hoàn toàn khi Pháp xâm lược.", c: "Sai" }
 ];
 
+let correctCount = 0;
+let wrongCount = 0;
+let answeredTotal = 0;
+
+function updateTaskbar() {
+    document.getElementById('count-correct').innerText = correctCount;
+    document.getElementById('count-wrong').innerText = wrongCount;
+    document.getElementById('count-total').innerText = answeredTotal;
+}
+
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -103,51 +158,63 @@ function shuffle(array) {
     return array;
 }
 
+function handleSelection(card, selectedIdx, correctIdx) {
+    if (card.classList.contains('answered')) return;
+    
+    card.classList.add('answered');
+    answeredTotal++;
+    
+    const options = card.querySelectorAll('.option-item');
+    options.forEach(opt => opt.classList.add('disabled'));
+
+    if (selectedIdx == correctIdx) {
+        options[selectedIdx].classList.add('correct-choice');
+        correctCount++;
+    } else {
+        options[selectedIdx].classList.add('wrong-choice');
+        options[correctIdx].classList.add('correct-choice');
+        wrongCount++;
+    }
+    updateTaskbar();
+}
+
 function render() {
     const container = document.getElementById('quiz-container');
-    let html = '<h3>Phần 1: 50 Câu Trắc Nghiệm</h3>';
+    let html = '<h3>Phần 1: Trắc Nghiệm (Click chọn để xem kết quả)</h3>';
     
     const shuffledMCQ = shuffle([...mcqData]);
     shuffledMCQ.forEach((item, i) => {
         const correctText = item.a[item.c];
         const options = shuffle([...item.a]);
         const newCorrect = options.indexOf(correctText);
-        html += `<div class="question-card" data-type="mcq" data-correct="${newCorrect}">
+        
+        const cardId = `mcq-${i}`;
+        html += `<div class="question-card" id="${cardId}">
             <span class="question-text">${i+1}. ${item.q}</span>
-            ${options.map((opt, idx) => `<label class="option-item"><input type="radio" name="mcq${i}" value="${idx}"> ${opt}</label>`).join('')}
+            <div class="options-container">
+                ${options.map((opt, idx) => `
+                    <div class="option-item" onclick="handleSelection(document.getElementById('${cardId}'), ${idx}, ${newCorrect})">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
         </div>`;
     });
 
-    html += '<h3>Phần 2: 10 Câu Đúng/Sai</h3>';
+    html += '<h3>Phần 2: Đúng / Sai</h3>';
     const shuffledTF = shuffle([...tfData]);
     shuffledTF.forEach((item, i) => {
-        html += `<div class="question-card" data-type="tf" data-correct="${item.c}">
+        const correctIdx = item.c === "Đúng" ? 0 : 1;
+        const cardId = `tf-${i}`;
+        html += `<div class="question-card" id="${cardId}">
             <span class="question-text">${i+51}. ${item.q}</span>
-            <label><input type="radio" name="tf${i}" value="Đúng"> Đúng</label>
-            <label style="margin-left:20px"><input type="radio" name="tf${i}" value="Sai"> Sai</label>
+            <div class="options-container" style="flex-direction: row;">
+                <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 0, ${correctIdx})">Đúng</div>
+                <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 1, ${correctIdx})">Sai</div>
+            </div>
         </div>`;
     });
     container.innerHTML = html;
-}
-
-function checkAnswers() {
-    let score = 0;
-    const cards = document.querySelectorAll('.question-card');
-    cards.forEach(card => {
-        const type = card.dataset.type;
-        const correct = card.dataset.correct;
-        const checked = card.querySelector('input:checked');
-        if (checked && checked.value == correct) {
-            score++;
-            card.style.background = "#e8f5e9";
-        } else {
-            card.style.background = "#ffebee";
-        }
-    });
-    const res = document.getElementById('result');
-    res.style.display = "block";
-    res.innerHTML = `Kết quả: ${score}/60 câu đúng (${(score/60*10).toFixed(1)} điểm)`;
-    window.scrollTo(0, document.body.scrollHeight);
 }
 
 window.onload = render;
