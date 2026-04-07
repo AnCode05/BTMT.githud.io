@@ -3,77 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ôn tập Văn minh Đại Việt - Phản hồi tức thì</title>
+    <title>Văn Minh Đại Việt - Trắc Nghiệm Lịch Sử</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #8b4513; 
-            --bg: #f4f1ea; 
-            --card: #ffffff;
-            --correct-bg: #d4edda;
-            --correct-text: #155724;
-            --wrong-bg: #f8d7da;
-            --wrong-text: #721c24;
+            --gold-primary: #b8860b; 
+            --royal-red: #8b0000;
+            --paper-bg: #fdfaf1; 
+            --text-dark: #2c2c2c;
+            --correct-green: #2d6a4f;
+            --wrong-red: #a4161a;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.08);
         }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: #333; line-height: 1.6; padding: 20px; margin-top: 80px; }
+
+        body { 
+            font-family: 'Lora', serif; 
+            background-color: #f4eee0; 
+            background-image: url("https://www.transparenttextures.com/patterns/parchment.png");
+            color: var(--text-dark); 
+            line-height: 1.7; 
+            padding: 20px; 
+            margin-top: 100px; 
+        }
         
-        /* Taskbar cố định phía trên */
+        /* Taskbar Hiện Đại */
         .taskbar {
             position: fixed;
-            top: 0; left: 0; right: 0;
-            background: var(--primary);
-            color: white;
-            padding: 15px 20px;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            background: rgba(139, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 12px 30px;
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            font-weight: bold;
-            font-size: 1.1em;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 1px solid var(--gold-primary);
         }
 
-        .container { max-width: 900px; margin: auto; background: var(--card); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .stats-group { display: flex; gap: 20px; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-value { font-size: 1.2em; font-weight: bold; color: var(--gold-primary); }
+        .stat-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; }
+
+        .container { 
+            max-width: 850px; 
+            margin: auto; 
+            background: var(--paper-bg); 
+            padding: 50px; 
+            border-radius: 4px; 
+            box-shadow: var(--card-shadow);
+            border: 1px solid #e2d1b3;
+            position: relative;
+        }
+
+        /* Họa tiết trang trí góc */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid #e2d1b3;
+            pointer-events: none;
+        }
+
+        h1 { 
+            text-align: center; 
+            color: var(--royal-red); 
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h3 {
+            border-left: 4px solid var(--gold-primary);
+            padding-left: 15px;
+            color: var(--royal-red);
+            margin: 40px 0 20px;
+        }
         
-        .question-card { margin-bottom: 20px; padding: 20px; border-left: 5px solid var(--primary); background: #fafafa; border-radius: 4px; transition: 0.3s; }
-        .question-text { font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1em; }
+        .question-card { 
+            margin-bottom: 30px; 
+            padding: 25px; 
+            background: #fff; 
+            border-radius: 8px; 
+            border-bottom: 3px solid #eee;
+            transition: all 0.3s ease;
+        }
         
-        .options-container { display: flex; flex-direction: column; gap: 10px; }
+        .question-text { 
+            font-weight: 700; 
+            display: block; 
+            margin-bottom: 20px; 
+            font-size: 1.15em;
+            color: var(--royal-red);
+        }
+        
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        
         .option-item { 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 5px; 
+            padding: 15px 20px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 6px; 
             cursor: pointer; 
             transition: all 0.2s;
-            background: white;
+            background: #fff;
+            position: relative;
         }
-        .option-item:hover:not(.disabled) { background: #eee; }
-        .option-item.disabled { cursor: not-allowed; }
 
-        /* Màu sắc đúng sai */
-        .option-item.correct-choice { background-color: var(--correct-bg) !important; border-color: #c3e6cb !important; color: var(--correct-text) !important; font-weight: bold; }
-        .option-item.wrong-choice { background-color: var(--wrong-bg) !important; border-color: #f5c6cb !important; color: var(--wrong-text) !important; }
+        .option-item:hover:not(.disabled) { 
+            border-color: var(--gold-primary);
+            background: #fffcf5;
+            transform: translateX(5px);
+        }
 
-        .btn-reset { background: white; color: var(--primary); border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-reset:hover { background: #eee; }
+        /* Trạng thái đúng/sai */
+        .option-item.correct-choice { 
+            background-color: #d4edda !important; 
+            border-color: var(--correct-green) !important; 
+            color: var(--correct-green) !important;
+            font-weight: bold;
+        }
+        .option-item.correct-choice::after { content: " ✓"; }
+
+        .option-item.wrong-choice { 
+            background-color: #f8d7da !important; 
+            border-color: var(--wrong-red) !important; 
+            color: var(--wrong-red) !important;
+        }
+        .option-item.wrong-choice::after { content: " ✗"; }
+
+        .disabled { cursor: not-allowed; opacity: 0.8; }
+
+        .btn-reset { 
+            background: var(--gold-primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-reset:hover { background: var(--royal-red); transform: scale(1.05); }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.8em; }
+            .taskbar { padding: 10px; font-size: 0.9em; }
+        }
     </style>
 </head>
 <body>
 
 <div class="taskbar">
-    <span>Đúng: <span id="count-correct">0</span></span>
-    <span>Sai: <span id="count-wrong">0</span></span>
-    <span>Tiến độ: <span id="count-total">0</span>/60</span>
-    <button class="btn-reset" onclick="location.reload()">Làm đề mới</button>
+    <div class="stats-group">
+        <div class="stat-item">
+            <span class="stat-value" id="count-correct">0</span>
+            <span class="stat-label">Đúng</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="count-wrong" style="color: #ff9999;">0</span>
+            <span class="stat-label">Sai</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="count-total">0</span>
+            <span class="stat-label">Câu</span>
+        </div>
+    </div>
+    <button class="btn-reset" onclick="location.reload()">Làm Lại Đề</button>
 </div>
 
 <div class="container">
-    <h1>Ôn Tập Văn Minh Đại Việt</h1>
+    <h1>Văn Minh Đại Việt</h1>
     <div id="quiz-container"></div>
 </div>
 
 <script>
-// Dữ liệu câu hỏi (Giữ nguyên từ yêu cầu trước của bạn)
+// Toàn bộ 50 câu MCQ + 10 câu TF từ yêu cầu trước của bạn được giữ nguyên
 const mcqData = [
     { q: "Văn minh Đại Việt tồn tại trong khoảng thời gian nào?", a: ["Từ thế kỉ X đến giữa thế kỉ XIX.", "Từ thế kỉ X đến cuối thế kỉ XIX.", "Từ thế kỉ XI đến đầu thế kỉ XX.", "Từ thời sơ sử đến thế kỉ X."], c: 0 },
     { q: "Nền tảng quan trọng nhất hình thành văn minh Đại Việt là gì?", a: ["Văn minh Văn Lang - Âu Lạc.", "Văn minh Trung Hoa.", "Văn minh Ấn Độ.", "Văn minh phương Tây."], c: 0 },
@@ -180,7 +293,7 @@ function handleSelection(card, selectedIdx, correctIdx) {
 
 function render() {
     const container = document.getElementById('quiz-container');
-    let html = '<h3>Phần 1: Trắc Nghiệm (Click chọn để xem kết quả)</h3>';
+    let html = '<h3>Phần 1: Trắc Nghiệm</h3>';
     
     const shuffledMCQ = shuffle([...mcqData]);
     shuffledMCQ.forEach((item, i) => {
@@ -190,7 +303,7 @@ function render() {
         
         const cardId = `mcq-${i}`;
         html += `<div class="question-card" id="${cardId}">
-            <span class="question-text">${i+1}. ${item.q}</span>
+            <span class="question-text">Câu hỏi ${i+1}: ${item.q}</span>
             <div class="options-container">
                 ${options.map((opt, idx) => `
                     <div class="option-item" onclick="handleSelection(document.getElementById('${cardId}'), ${idx}, ${newCorrect})">
@@ -207,8 +320,8 @@ function render() {
         const correctIdx = item.c === "Đúng" ? 0 : 1;
         const cardId = `tf-${i}`;
         html += `<div class="question-card" id="${cardId}">
-            <span class="question-text">${i+51}. ${item.q}</span>
-            <div class="options-container" style="flex-direction: row;">
+            <span class="question-text">Câu hỏi ${i+51}: ${item.q}</span>
+            <div class="options-container" style="flex-direction: row; gap: 20px;">
                 <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 0, ${correctIdx})">Đúng</div>
                 <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 1, ${correctIdx})">Sai</div>
             </div>
