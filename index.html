@@ -1,590 +1,156 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cyber TFT - Ultimate Optimized</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn tập Văn minh Đại Việt - Đầy đủ 60 câu</title>
     <style>
-      :root {
-        --gold: #f59e0b;
-        --bg: #020617;
-        --panel: #1e293b;
-        --blue: #3b82f6;
-        --green: #22c55e;
-        --red: #ef4444;
-      }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: white;
-        font-family: "Segoe UI", sans-serif;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        overflow: hidden;
-      }
-
-      #header {
-        width: 100%;
-        max-width: 600px;
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 15px;
-        background: rgba(15, 23, 42, 0.9);
-        border-bottom: 2px solid #334155;
-        z-index: 10;
-      }
-      .stat {
-        font-size: 1.1rem;
-        font-weight: bold;
-      }
-      .gold-ui {
-        color: var(--gold);
-      }
-      .hp-ui {
-        color: var(--red);
-      }
-
-      #game-wrapper {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        position: relative;
-      }
-
-      canvas {
-        background: #020617;
-        touch-action: none;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        cursor: grab;
-      }
-
-      #controls {
-        margin: 8px;
-        display: flex;
-        gap: 10px;
-      }
-      button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-      }
-      .btn-roll {
-        background: var(--blue);
-        color: white;
-      }
-      .btn-start {
-        background: var(--green);
-        color: white;
-      }
-      button:hover {
-        filter: brightness(1.2);
-        transform: translateY(-2px);
-      }
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      #shop {
-        width: 100%;
-        max-width: 600px;
-        height: 100px;
-        background: var(--panel);
-        display: flex;
-        gap: 8px;
-        padding: 10px;
-        box-sizing: border-box;
-        border-radius: 8px 8px 0 0;
-      }
-      .shop-slot {
-        flex: 1;
-        border: 2px solid #334155;
-        border-radius: 6px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #0f172a;
-        cursor: pointer;
-        font-size: 0.85rem;
-      }
-      .shop-slot:hover {
-        border-color: var(--gold);
-        background: #1e293b;
-      }
-      .shop-slot b {
-        display: block;
-      }
-      .shop-slot span {
-        color: var(--gold);
-        font-weight: bold;
-      }
+        :root { --primary: #8b4513; --bg: #f4f1ea; --card: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: var(--card); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .question-card { margin-bottom: 20px; padding: 15px; border-left: 5px solid var(--primary); background: #fafafa; border-radius: 4px; }
+        .question-text { font-weight: bold; display: block; margin-bottom: 10px; }
+        .option-item { margin-bottom: 5px; cursor: pointer; display: block; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; }
+        #result { margin-top: 20px; font-weight: bold; font-size: 1.3em; text-align: center; color: #27ae60; position: sticky; bottom: 20px; background: white; padding: 10px; border: 2px solid var(--primary); display: none; }
     </style>
-  </head>
-  <body>
-    <div id="header">
-      <div class="stat gold-ui">💰 <span id="gold-val">10</span></div>
-      <div id="stage-ui">STAGE 1-1</div>
-      <div class="stat hp-ui">❤️ <span id="hp-val">100</span></div>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hệ Thống Ôn Tập: Văn Minh Đại Việt (60 Câu)</h1>
+    <div id="quiz-container"></div>
+    <div style="text-align: center;">
+        <button onclick="checkAnswers()">Nộp bài & Xem kết quả</button>
+        <button style="background:#555" onclick="location.reload()">Làm bộ đề mới (Xáo câu)</button>
     </div>
+    <div id="result"></div>
+</div>
 
-    <div id="game-wrapper">
-      <canvas id="tftCanvas"></canvas>
-      <div id="controls">
-        <button class="btn-roll" onclick="gameShop.roll()">Roll (2G)</button>
-        <button class="btn-start" id="start-btn" onclick="startBattle()">
-          BẮT ĐẦU CHIẾN ĐẤU
-        </button>
-      </div>
-    </div>
+<script>
+const mcqData = [
+    { q: "Văn minh Đại Việt tồn tại trong khoảng thời gian nào?", a: ["Từ thế kỉ X đến giữa thế kỉ XIX.", "Từ thế kỉ X đến cuối thế kỉ XIX.", "Từ thế kỉ XI đến đầu thế kỉ XX.", "Từ thời sơ sử đến thế kỉ X."], c: 0 },
+    { q: "Nền tảng quan trọng nhất hình thành văn minh Đại Việt là gì?", a: ["Văn minh Văn Lang - Âu Lạc.", "Văn minh Trung Hoa.", "Văn minh Ấn Độ.", "Văn minh phương Tây."], c: 0 },
+    { q: "Yếu tố nào là cơ sở thực tiễn cho sự phát triển của văn minh Đại Việt?", a: ["Công cuộc xây dựng và bảo vệ đất nước của các triều đại độc lập.", "Sự đô hộ của phong kiến phương Bắc.", "Sự du nhập hoàn toàn của văn hóa phương Tây.", "Quá trình di dân ra nước ngoài."], c: 0 },
+    { q: "Văn minh Đại Việt tiếp thu có chọn lọc thành tựu từ đâu?", a: ["Trung Quốc, Ấn Độ và sau này là phương Tây.", "Chỉ từ Trung Quốc.", "Chỉ từ Ấn Độ.", "Các nước Đông Nam Á hải đảo."], c: 0 },
+    { q: "Quốc hiệu 'Đại Việt' được sử dụng chính thức từ năm nào?", a: ["1054", "938", "1010", "1804"], c: 0 },
+    { q: "Thời kỳ nào được coi là giai đoạn bước đầu hình thành văn minh Đại Việt?", a: ["Thời Ngô - Đinh - Tiền Lê.", "Thời Lý - Trần - Hồ.", "Thời Lê Sơ.", "Thời Nguyễn."], c: 0 },
+    { q: "Kinh đô Thăng Long chính thức được chọn từ triều đại nào?", a: ["Triều Lý.", "Triều Ngô.", "Triều Trần.", "Triều Lê Sơ."], c: 0 },
+    { q: "Đặc điểm nổi bật của văn minh thời Lý - Trần là gì?", a: ["'Tam giáo đồng nguyên'.", "Nho giáo độc tôn.", "Chịu ảnh hưởng mạnh của Thiên Chúa giáo.", "Văn hóa dân gian bị mai một."], c: 0 },
+    { q: "Triều đại nào đưa Nho giáo trở thành hệ tư tưởng chính thống, độc tôn?", a: ["Nhà Lê Sơ.", "Nhà Trần.", "Nhà Hồ.", "Nhà Mạc."], c: 0 },
+    { q: "Giai đoạn nào văn minh Đại Việt bắt đầu tiếp xúc phương Tây?", a: ["Thế kỉ XVI - XVIII.", "Thế kỉ X - XIV.", "Thế kỉ XV.", "Thế kỉ XIX."], c: 0 },
+    { q: "Sự kiện nào đánh dấu phục hồi độc lập, mở đường cho văn minh Đại Việt?", a: ["Chiến thắng Bạch Đằng năm 938.", "Chiến thắng Rạch Gầm - Xoài Mút.", "Cuộc cải cách của Minh Mạng.", "Khởi nghĩa Lam Sơn thành công."], c: 0 },
+    { q: "Triều đại thực hiện cải cách hành chính lớn nửa sau thế kỉ XV?", a: ["Nhà Lê Sơ (Lê Thánh Tông).", "Nhà Lý.", "Nhà Trần.", "Nhà Nguyễn."], c: 0 },
+    { q: "Đặc điểm kinh tế nổi bật thời Mạc là gì?", a: ["Kinh tế hướng ngoại, khuyến khích công thương nghiệp.", "Kinh tế khép kín.", "Chỉ tập trung vào nông nghiệp.", "Cấm tuyệt đối buôn bán với nước ngoài."], c: 0 },
+    { q: "Nội dung nào phản ánh đúng văn minh Đại Việt thời Nguyễn?", a: ["Tính thống nhất của đất nước được củng cố.", "Phật giáo thịnh đạt nhất.", "Chữ Quốc ngữ trở thành chữ viết chính thức.", "Xóa bỏ hoàn toàn Nho giáo."], c: 0 },
+    { q: "Thế kỉ XVI-XVII, tôn giáo mới nào du nhập vào Đại Việt?", a: ["Thiên Chúa giáo (Công giáo).", "Đạo Hồi.", "Đạo Tin lành.", "Ấn Độ giáo."], c: 0 },
+    { q: "Thể chế chính trị xuyên suốt của các triều đại Đại Việt là?", a: ["Quân chủ chuyên chế trung ương tập quyền.", "Quân chủ lập hiến.", "Cộng hòa.", "Quý tộc thị tộc."], c: 0 },
+    { q: "Bộ luật nào được ban hành dưới thời vua Lê Thánh Tông?", a: ["Quốc triều hình luật (Luật Hồng Đức).", "Hình thư.", "Hình luật.", "Hoàng Việt luật lệ."], c: 0 },
+    { q: "Bộ luật thành văn đầu tiên của nước ta là bộ luật nào?", a: ["Hình thư (thời Lý).", "Hình luật (thời Trần).", "Luật Gia Long.", "Luật Hồng Đức."], c: 0 },
+    { q: "Cơ quan giám sát quan lại thời Lê Sơ là?", a: ["Ngự sử đài.", "Lục Bộ.", "Hàn lâm viện.", "Quốc tử giám."], c: 0 },
+    { q: "Dưới thời Lê Sơ, đơn vị hành chính địa phương thấp nhất là?", a: ["Xã.", "Đạo.", "Phủ.", "Huyện."], c: 0 },
+    { q: "Ngành kinh tế đóng vai trò nền tảng của văn minh Đại Việt?", a: ["Nông nghiệp lúa nước.", "Thủ công nghiệp.", "Thương nghiệp.", "Khai thác lâm sản."], c: 0 },
+    { q: "Lễ nghi vua thực hiện để khuyến khích nông nghiệp?", a: ["Lễ Tịch điền.", "Lễ Tế Nam Giao.", "Lễ Trung nguyên.", "Lễ Thề."], c: 0 },
+    { q: "Cơ quan chuyên lo đắp đê thành lập từ thời nào?", a: ["Thời Trần (Hà đê sứ).", "Thời Đinh.", "Thời Lý.", "Thời Nguyễn."], c: 0 },
+    { q: "Sản phẩm tiêu biểu của thủ công nghiệp nhà nước?", a: ["Súng thần công, tiền đồng.", "Gốm Chu Đậu.", "Lụa Vạn Phúc.", "Chiếu Nga Sơn."], c: 0 },
+    { q: "Thương cảng quốc tế sầm uất vùng Đông Bắc thời Lý-Trần?", a: ["Vân Đồn.", "Hội An.", "Phố Hiến.", "Thanh Hà."], c: 0 },
+    { q: " 'Kẻ Chợ' là tên gọi dân gian để chỉ khu vực nào?", a: ["Kinh đô Thăng Long.", "Phố cổ Hội An.", "Cố đô Huế.", "Đô thị Gia Định."], c: 0 },
+    { q: "Thành tựu khẳng định trình độ cao của nghề gốm Đại Việt?", a: ["Xuất khẩu sang Nhật Bản, Đông Nam Á và Tây Á.", "Chỉ dùng trong nước.", "Chỉ làm từ đất sét trắng.", "Không có hoa văn."], c: 0 },
+    { q: "Tiền kim loại bắt đầu lưu hành phổ biến từ triều đại nào?", a: ["Triều Đinh.", "Triều Ngô.", "Triều Lý.", "Triều Lê Sơ."], c: 0 },
+    { q: "Nghề thủ công nào được gọi là 'tứ đại khí' thời Lý-Trần?", a: ["Các công trình bằng đồng khổng lồ.", "Dệt, gốm, chạm đá.", "Làm giấy, khảm trai.", "Đóng thuyền chiến."], c: 0 },
+    { q: "Công ty Đông Ấn nước nào đến buôn bán thế kỉ XVII?", a: ["Hà Lan và Anh.", "Pháp và Mỹ.", "Tây Ban Nha và Bồ Đào Nha.", "Đức và Ý."], c: 0 },
+    { q: "Hệ tư tưởng chủ đạo đời sống chính trị từ thế kỉ XV?", a: ["Nho giáo.", "Phật giáo.", "Đạo giáo.", "Công giáo."], c: 0 },
+    { q: "Phật giáo phát triển rực rỡ nhất vào thời kỳ nào?", a: ["Lý - Trần.", "Đinh - Tiền Lê.", "Lê Sơ.", "Nguyễn."], c: 0 },
+    { q: "Dòng thiền nào do Trần Nhân Tông sáng lập?", a: ["Thiền phái Trúc Lâm Yên Tử.", "Thiền Tì-ni-đa-lưu-chi.", "Thiền Vô Ngôn Thông.", "Thiền Thảo Đường."], c: 0 },
+    { q: "Văn Miếu được xây dựng vào năm nào?", a: ["1070", "1076", "1442", "1802"], c: 0 },
+    { q: "Quốc Tử Giám có vai trò là gì?", a: ["Trường đại học công lập đầu tiên.", "Nơi thờ các vị thần.", "Nơi ở của hoàng gia.", "Cơ quan chép sử."], c: 0 },
+    { q: "Chế độ khoa cử chính thức bắt đầu từ năm nào?", a: ["1075", "1010", "1428", "1802"], c: 0 },
+    { q: "Bia Tiến sĩ tại Văn Miếu bắt đầu dựng từ thời vua nào?", a: ["Lê Thánh Tông.", "Lý Thánh Tông.", "Trần Thánh Tông.", "Minh Mạng."], c: 0 },
+    { q: "Mục đích của việc dựng bia Tiến sĩ là gì?", a: ["Vinh danh người đỗ đạt và khuyến khích học tập.", "Để làm đẹp Văn Miếu.", "Ghi tên các vị vua.", "Làm cột mốc biên giới."], c: 0 },
+    { q: "Nhà giáo mệnh danh là 'Vạn thế sư biểu' của Việt Nam?", a: ["Chu Văn An.", "Lê Quý Đôn.", "Nguyễn Trãi.", "Nguyễn Bỉnh Khiêm."], c: 0 },
+    { q: "Nội dung giáo dục chủ yếu thời phong kiến là gì?", a: ["Kinh thư, kinh điển của Nho gia.", "Khoa học kỹ thuật.", "Ngoại ngữ và kinh tế.", "Võ thuật và quân sự."], c: 0 },
+    { q: "Chữ viết sáng tạo dựa trên chữ Hán để ghi âm tiếng Việt?", a: ["Chữ Nôm.", "Chữ Phạn.", "Chữ Quốc ngữ.", "Chữ Latinh."], c: 0 },
+    { q: "Chữ Quốc ngữ xuất hiện tại Việt Nam vào thời gian nào?", a: ["Đầu thế kỉ XVII.", "Thế kỉ X.", "Thế kỉ XV.", "Cuối thế kỉ XIX."], c: 0 },
+    { q: "Tác phẩm 'Bình Ngô đại cáo' là của ai?", a: ["Nguyễn Trãi.", "Lý Thường Kiệt.", "Trần Quốc Tuấn.", "Nguyễn Du."], c: 0 },
+    { q: "Truyện Kiều là kiệt tác văn học viết bằng chữ gì?", a: ["Chữ Nôm.", "Chữ Hán.", "Chữ Quốc ngữ.", "Chữ Pháp."], c: 0 },
+    { q: "Công trình kiến trúc mệnh danh là 'đóa sen nở trên nước'?", a: ["Chùa Một Cột.", "Tháp Phổ Minh.", "Chùa Trấn Quốc.", "Ngọ Môn."], c: 0 },
+    { q: "Nghệ thuật điêu khắc Đại Việt hay thể hiện hình tượng?", a: ["Sư tử, rồng, hoa sen, chim phượng.", "Nhân sư.", "Vị thần Hy Lạp.", "Muông thú phương Tây."], c: 0 },
+    { q: "Nhã nhạc cung đình là di sản tiêu biểu của triều đại?", a: ["Triều Nguyễn.", "Triều Trần.", "Triều Lê Sơ.", "Triều Lý."], c: 0 },
+    { q: "Dòng tranh dân gian nổi tiếng treo vào dịp Tết là?", a: ["Tranh Đông Hồ.", "Tranh sơn dầu.", "Tranh lụa.", "Tranh thủy mặc."], c: 0 },
+    { q: "Nghệ thuật sân khấu phổ biến nông thôn đồng bằng Bắc Bộ?", a: ["Chèo, Múa rối nước.", "Tuồng.", "Cải lương.", "Đờn ca tài tử."], c: 0 },
+    { q: "Ý nghĩa lớn nhất của văn minh Đại Việt là gì?", a: ["Chứng tỏ sức sống mãnh liệt của văn hóa dân tộc.", "Giúp VN giàu có nhất.", "Thay thế văn minh khác.", "Chỉ có giá trị kiến trúc."], c: 0 }
+];
 
-    <div id="shop"></div>
+const tfData = [
+    { q: "Văn minh Đại Việt là sự kế thừa trực tiếp từ văn minh Văn Lang - Âu Lạc.", c: "Đúng" },
+    { q: "Chữ Nôm là chữ chính thống trong văn bản hành chính thời Lý - Trần.", c: "Sai" },
+    { q: " 'Tam giáo đồng nguyên' gồm Phật, Nho, Đạo cùng tồn tại hòa hợp.", c: "Đúng" },
+    { q: "Nhà nước Đại Việt phong kiến không hề chú trọng phát triển thương nghiệp.", c: "Sai" },
+    { q: "Luật Hồng Đức có điểm tiến bộ là bảo vệ quyền lợi phụ nữ.", c: "Đúng" },
+    { q: "Chữ Quốc ngữ do người Việt tự sáng tạo dựa trên cải tiến chữ Nôm.", c: "Sai" },
+    { q: "Dưới thời Nguyễn, tính thống nhất đất nước được củng cố mạnh mẽ.", c: "Đúng" },
+    { q: "Tất cả triều đại Đại Việt đều đặt kinh đô tại Thăng Long.", c: "Sai" },
+    { q: "Khoa cử thời Lê Sơ tổ chức quy củ để tuyển chọn hiền tài.", c: "Đúng" },
+    { q: "Văn minh Đại Việt kết thúc hoàn toàn khi Pháp xâm lược.", c: "Sai" }
+];
 
-    <script>
-      /* --- CẤU HÌNH DỮ LIỆU GỐC --- */
-      const GRID_SIZE = 60;
-      const COLS = 7,
-        ROWS = 8;
-      const BENCH_ROW = 7;
-      const UNIT_DATA = {
-        Warrior: {
-          hp: 800,
-          atk: 55,
-          range: 1,
-          color: "#60a5fa",
-          cost: 1,
-          crit: 0.25,
-        },
-        Ranger: {
-          hp: 450,
-          atk: 65,
-          range: 4,
-          color: "#fbbf24",
-          cost: 1,
-          crit: 0.4,
-        },
-        Mage: {
-          hp: 550,
-          atk: 75,
-          range: 3,
-          color: "#a78bfa",
-          cost: 2,
-          crit: 0.15,
-        },
-        Tank: {
-          hp: 1200,
-          atk: 35,
-          range: 1,
-          color: "#f87171",
-          cost: 3,
-          crit: 0.1,
-        },
-      };
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
-      let gold = 10,
-        hp = 100,
-        stage = 1,
-        subStage = 1;
-      let units = [],
-        particles = [];
-      let gameState = "PREP";
-      let dragUnit = null;
+function render() {
+    const container = document.getElementById('quiz-container');
+    let html = '<h3>Phần 1: 50 Câu Trắc Nghiệm</h3>';
+    
+    const shuffledMCQ = shuffle([...mcqData]);
+    shuffledMCQ.forEach((item, i) => {
+        const correctText = item.a[item.c];
+        const options = shuffle([...item.a]);
+        const newCorrect = options.indexOf(correctText);
+        html += `<div class="question-card" data-type="mcq" data-correct="${newCorrect}">
+            <span class="question-text">${i+1}. ${item.q}</span>
+            ${options.map((opt, idx) => `<label class="option-item"><input type="radio" name="mcq${i}" value="${idx}"> ${opt}</label>`).join('')}
+        </div>`;
+    });
 
-      const canvas = document.getElementById("tftCanvas");
-      const ctx = canvas.getContext("2d");
-      canvas.width = COLS * GRID_SIZE;
-      canvas.height = ROWS * GRID_SIZE;
+    html += '<h3>Phần 2: 10 Câu Đúng/Sai</h3>';
+    const shuffledTF = shuffle([...tfData]);
+    shuffledTF.forEach((item, i) => {
+        html += `<div class="question-card" data-type="tf" data-correct="${item.c}">
+            <span class="question-text">${i+51}. ${item.q}</span>
+            <label><input type="radio" name="tf${i}" value="Đúng"> Đúng</label>
+            <label style="margin-left:20px"><input type="radio" name="tf${i}" value="Sai"> Sai</label>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
 
-      /* --- LỚP TƯỚNG (UNIT CLASS) --- */
-      class Unit {
-        constructor(name, x, y, team) {
-          let d = UNIT_DATA[name];
-          this.name = name;
-          this.team = team;
-          this.gridX = x;
-          this.gridY = y;
-          this.x = x * GRID_SIZE + GRID_SIZE / 2;
-          this.y = y * GRID_SIZE + GRID_SIZE / 2;
-          this.hp = d.hp;
-          this.maxHp = d.hp;
-          this.atk = d.atk;
-          this.range = d.range;
-          this.color = d.color;
-          this.critChance = d.crit;
-          this.shield = 0;
-          this.star = 1;
-          this.mana = 0;
-          this.maxMana = 100;
-          this.lastAtk = 0;
-          this.target = null;
-          this.isHovered = false;
+function checkAnswers() {
+    let score = 0;
+    const cards = document.querySelectorAll('.question-card');
+    cards.forEach(card => {
+        const type = card.dataset.type;
+        const correct = card.dataset.correct;
+        const checked = card.querySelector('input:checked');
+        if (checked && checked.value == correct) {
+            score++;
+            card.style.background = "#e8f5e9";
+        } else {
+            card.style.background = "#ffebee";
         }
+    });
+    const res = document.getElementById('result');
+    res.style.display = "block";
+    res.innerHTML = `Kết quả: ${score}/60 câu đúng (${(score/60*10).toFixed(1)} điểm)`;
+    window.scrollTo(0, document.body.scrollHeight);
+}
 
-        draw() {
-          let r = 18 + this.star * 2;
-          if (this.isHovered) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = "white";
-          }
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          ctx.strokeStyle = this.isHovered
-            ? "yellow"
-            : this.team === "player"
-            ? "white"
-            : "#ff4444";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-
-          // Bars
-          const barW = 40,
-            barH = 5,
-            xOff = this.x - 20,
-            yOff = this.y - 32;
-          ctx.fillStyle = "#334155";
-          ctx.fillRect(xOff, yOff, barW, barH);
-          ctx.fillStyle = this.team === "player" ? "#22c55e" : "#ef4444";
-          ctx.fillRect(xOff, yOff, barW * (this.hp / this.maxHp), barH);
-          if (this.shield > 0) {
-            ctx.fillStyle = "#cbd5e1";
-            ctx.fillRect(
-              xOff,
-              yOff,
-              barW * (this.shield / this.maxHp),
-              barH / 2
-            );
-          }
-          ctx.fillStyle = "#3b82f6";
-          ctx.fillRect(xOff, yOff + 6, barW * (this.mana / this.maxMana), 2);
-
-          ctx.fillStyle = "white";
-          ctx.font = "bold 11px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText("★".repeat(this.star), this.x, this.y - 35);
-          if (this.isHovered) this.drawTooltip();
-        }
-
-        drawTooltip() {
-          const tX = this.x + 30,
-            tY = this.y - 100;
-          const lines = [
-            {
-              label: this.name.toUpperCase(),
-              val: "★".repeat(this.star),
-              c: "#fbbf24",
-            },
-            {
-              label: "Máu:",
-              val: `${Math.floor(this.hp)}/${this.maxHp}`,
-              c: "#22c55e",
-            },
-            { label: "Sát thương:", val: this.atk, c: "#f87171" },
-            {
-              label: "Mana:",
-              val: `${this.mana}/${this.maxMana}`,
-              c: "#3b82f6",
-            },
-            {
-              label: "Chí mạng:",
-              val: this.critChance * 100 + "%",
-              c: "#f59e0b",
-            },
-            { label: "Khiên:", val: Math.floor(this.shield), c: "#cbd5e1" },
-          ];
-          ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
-          ctx.fillRect(tX, tY, 140, 105);
-          ctx.strokeStyle = "#475569";
-          ctx.strokeRect(tX, tY, 140, 105);
-          ctx.textAlign = "left";
-          ctx.font = "bold 10px Arial";
-          lines.forEach((l, i) => {
-            ctx.fillStyle = "white";
-            ctx.fillText(l.label, tX + 8, tY + 18 + i * 15);
-            ctx.fillStyle = l.c;
-            ctx.fillText(l.val, tX + 80, tY + 18 + i * 15);
-          });
-        }
-
-        update(enemies) {
-          if (gameState !== "COMBAT" || this.hp <= 0) return;
-          if (!this.target || this.target.hp <= 0) {
-            this.target = enemies.reduce(
-              (prev, curr) =>
-                Math.hypot(this.x - prev.x, this.y - prev.y) <
-                Math.hypot(this.x - curr.x, this.y - curr.y)
-                  ? prev
-                  : curr,
-              enemies[0]
-            );
-          }
-          if (this.target) {
-            let d = Math.hypot(this.x - this.target.x, this.y - this.target.y);
-            if (d <= this.range * GRID_SIZE) {
-              if (Date.now() - this.lastAtk > 1000) {
-                let dmg = this.atk;
-                if (Math.random() < this.critChance) dmg *= 2;
-                if (this.target.shield > 0) {
-                  this.target.shield -= dmg;
-                  if (this.target.shield < 0) {
-                    this.target.hp += this.target.shield;
-                    this.target.shield = 0;
-                  }
-                } else this.target.hp -= dmg;
-
-                this.mana = Math.min(this.maxMana, this.mana + 20);
-                this.lastAtk = Date.now();
-                createHitEffect(this.target.x, this.target.y, this.color);
-                if (this.mana >= this.maxMana) this.cast();
-              }
-            } else {
-              let angle = Math.atan2(
-                this.target.y - this.y,
-                this.target.x - this.x
-              );
-              this.x += Math.cos(angle) * 2;
-              this.y += Math.sin(angle) * 2;
-            }
-          }
-        }
-
-        cast() {
-          this.mana = 0;
-          this.shield += 200;
-          createHitEffect(this.x, this.y, "white", 15);
-          // Gây sát thương lan xung quanh
-          units.forEach((u) => {
-            if (
-              u.team !== this.team &&
-              Math.hypot(this.x - u.x, this.y - u.y) < 120
-            ) {
-              u.hp -= this.atk * 1.2;
-            }
-          });
-        }
-      }
-
-      /* --- SHOP & UPGRADE LOGIC --- */
-      const gameShop = {
-        slots: [],
-        roll() {
-          if (gold < 2) return;
-          gold -= 2;
-          const keys = Object.keys(UNIT_DATA);
-          this.slots = Array(5)
-            .fill(0)
-            .map(() => keys[Math.floor(Math.random() * keys.length)]);
-          this.render();
-          updateUI();
-        },
-        buy(idx) {
-          let name = this.slots[idx];
-          if (!name || gold < UNIT_DATA[name].cost) return;
-          for (let i = 0; i < COLS; i++) {
-            if (!units.find((u) => u.gridX === i && u.gridY === BENCH_ROW)) {
-              gold -= UNIT_DATA[name].cost;
-              units.push(new Unit(name, i, BENCH_ROW, "player"));
-              this.slots[idx] = null;
-              checkUpgrades();
-              this.render();
-              updateUI();
-              return;
-            }
-          }
-        },
-        render() {
-          document.getElementById("shop").innerHTML = this.slots
-            .map((s, i) =>
-              s
-                ? `<div class="shop-slot" onclick="gameShop.buy(${i})"><b>${s}</b><span>${UNIT_DATA[s].cost}G</span></div>`
-                : `<div class="shop-slot" style="opacity:0.3">Empty</div>`
-            )
-            .join("");
-        },
-      };
-
-      function checkUpgrades() {
-        let counts = {};
-        units
-          .filter((u) => u.team === "player" && u.star < 3)
-          .forEach((u) => {
-            let id = u.name + u.star;
-            counts[id] = (counts[id] || 0) + 1;
-            if (counts[id] >= 3) {
-              let rem = 3;
-              units = units.filter((un) => {
-                if (un.name === u.name && un.star === u.star && rem > 0) {
-                  rem--;
-                  return false;
-                }
-                return true;
-              });
-              let up = new Unit(u.name, u.gridX, u.gridY, "player");
-              up.star = u.star + 1;
-              up.maxHp *= 1.8;
-              up.hp = up.maxHp;
-              up.atk *= 1.5;
-              units.push(up);
-              checkUpgrades();
-            }
-          });
-      }
-
-      /* --- TRẬN ĐẤU --- */
-      function startBattle() {
-        if (gameState === "COMBAT") return;
-        units = units.filter((u) => u.team !== "enemy");
-        let count = Math.min(stage + 1, 7);
-        for (let i = 0; i < count; i++) {
-          let names = Object.keys(UNIT_DATA);
-          let u = new Unit(
-            names[Math.floor(Math.random() * names.length)],
-            i,
-            Math.floor(Math.random() * 3),
-            "enemy"
-          );
-          if (stage >= 3) u.star = 2;
-          units.push(u);
-        }
-        gameState = "COMBAT";
-        document.getElementById("start-btn").disabled = true;
-      }
-
-      function endBattle(winner) {
-        gameState = "PREP";
-        if (winner === "enemy") hp -= 15;
-        gold += 5 + Math.floor(gold / 10);
-        subStage++;
-        if (subStage > 4) {
-          subStage = 1;
-          stage++;
-        }
-        units.forEach((u) => {
-          u.hp = u.maxHp;
-          u.mana = 0;
-          u.shield = 0;
-          u.x = u.gridX * GRID_SIZE + GRID_SIZE / 2;
-          u.y = u.gridY * GRID_SIZE + GRID_SIZE / 2;
-        });
-        document.getElementById("start-btn").disabled = false;
-        gameShop.roll();
-        updateUI();
-      }
-
-      /* --- HIỆU ỨNG & INPUT --- */
-      function createHitEffect(x, y, color, count = 6) {
-        for (let i = 0; i < count; i++) {
-          particles.push({
-            x,
-            y,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8,
-            life: 1,
-            color,
-          });
-        }
-      }
-
-      canvas.addEventListener("mousedown", (e) => {
-        if (gameState !== "PREP") return;
-        const r = canvas.getBoundingClientRect();
-        const mx = e.clientX - r.left,
-          my = e.clientY - r.top;
-        dragUnit = units.find(
-          (u) => u.team === "player" && Math.hypot(u.x - mx, u.y - my) < 25
-        );
-      });
-      window.addEventListener("mousemove", (e) => {
-        const r = canvas.getBoundingClientRect();
-        const mx = e.clientX - r.left,
-          my = e.clientY - r.top;
-        units.forEach(
-          (u) => (u.isHovered = Math.hypot(u.x - mx, u.y - my) < 25)
-        );
-        if (dragUnit) {
-          dragUnit.x = mx;
-          dragUnit.y = my;
-        }
-      });
-      window.addEventListener("mouseup", () => {
-        if (dragUnit) {
-          let gx = Math.floor(dragUnit.x / GRID_SIZE),
-            gy = Math.floor(dragUnit.y / GRID_SIZE);
-          if (gy >= 4 && gx >= 0 && gx < COLS) {
-            dragUnit.gridX = gx;
-            dragUnit.gridY = gy;
-          }
-          dragUnit.x = dragUnit.gridX * GRID_SIZE + GRID_SIZE / 2;
-          dragUnit.y = dragUnit.gridY * GRID_SIZE + GRID_SIZE / 2;
-          dragUnit = null;
-        }
-      });
-
-      function updateUI() {
-        document.getElementById("gold-val").innerText = gold;
-        document.getElementById("hp-val").innerText = hp;
-        document.getElementById(
-          "stage-ui"
-        ).innerText = `STAGE ${stage}-${subStage}`;
-      }
-
-      function animate() {
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // Vẽ lưới bàn cờ
-        for (let r = 0; r < ROWS; r++)
-          for (let c = 0; c < COLS; c++) {
-            ctx.fillStyle =
-              (r + c) % 2 === 0 ? "rgba(30, 41, 59, 0.2)" : "transparent";
-            ctx.fillRect(c * GRID_SIZE, r * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-          }
-        ctx.strokeStyle = "#334155";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 4 * GRID_SIZE);
-        ctx.lineTo(canvas.width, 4 * GRID_SIZE);
-        ctx.stroke();
-
-        let pTeam = units.filter((u) => u.team === "player" && u.hp > 0);
-        let eTeam = units.filter((u) => u.team === "enemy" && u.hp > 0);
-
-        units.forEach((u) => {
-          if (u.hp > 0) {
-            if (u !== dragUnit) u.update(u.team === "player" ? eTeam : pTeam);
-            u.draw();
-          }
-        });
-
-        if (gameState === "COMBAT") {
-          if (eTeam.length === 0) endBattle("player");
-          else if (pTeam.length === 0) endBattle("enemy");
-        }
-
-        particles = particles.filter((p) => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.life -= 0.05;
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = p.life;
-          ctx.fillRect(p.x, p.y, 3, 3);
-          ctx.globalAlpha = 1;
-          return p.life > 0;
-        });
-
-        requestAnimationFrame(animate);
-      }
-
-      gameShop.roll();
-      animate();
-    </script>
-  </body>
+window.onload = render;
+</script>
+</body>
 </html>
