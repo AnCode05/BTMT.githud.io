@@ -1,336 +1,990 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Văn Minh Đại Việt - Trắc Nghiệm Lịch Sử</title>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        :root { 
-            --gold-primary: #b8860b; 
-            --royal-red: #8b0000;
-            --paper-bg: #fdfaf1; 
-            --text-dark: #2c2c2c;
-            --correct-green: #2d6a4f;
-            --wrong-red: #a4161a;
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trắc Nghiệm Vật Lí 10</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-        body { 
-            font-family: 'Lora', serif; 
-            background-color: #f4eee0; 
-            background-image: url("https://www.transparenttextures.com/patterns/parchment.png");
-            color: var(--text-dark); 
-            line-height: 1.7; 
-            padding: 20px; 
-            margin-top: 100px; 
-        }
-        
-        /* Taskbar Hiện Đại */
-        .taskbar {
-            position: fixed;
-            top: 20px; left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 800px;
-            background: rgba(139, 0, 0, 0.95);
-            backdrop-filter: blur(10px);
-            color: #fff;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            border-radius: 50px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            border: 1px solid var(--gold-primary);
-        }
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-        .stats-group { display: flex; gap: 20px; }
-        .stat-item { display: flex; flex-direction: column; align-items: center; }
-        .stat-value { font-size: 1.2em; font-weight: bold; color: var(--gold-primary); }
-        .stat-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; }
+    .quiz-container {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
 
-        .container { 
-            max-width: 850px; 
-            margin: auto; 
-            background: var(--paper-bg); 
-            padding: 50px; 
-            border-radius: 4px; 
-            box-shadow: var(--card-shadow);
-            border: 1px solid #e2d1b3;
-            position: relative;
-        }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
 
-        /* Họa tiết trang trí góc */
-        .container::before {
-            content: "";
-            position: absolute;
-            top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border: 1px solid #e2d1b3;
-            pointer-events: none;
-        }
+    .top-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
 
-        h1 { 
-            text-align: center; 
-            color: var(--royal-red); 
-            font-family: 'Crimson Pro', serif;
-            font-size: 2.5em;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+    .score-box {
+      background: rgba(255,255,255,0.08);
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 15px;
+    }
 
-        h3 {
-            border-left: 4px solid var(--gold-primary);
-            padding-left: 15px;
-            color: var(--royal-red);
-            margin: 40px 0 20px;
-        }
-        
-        .question-card { 
-            margin-bottom: 30px; 
-            padding: 25px; 
-            background: #fff; 
-            border-radius: 8px; 
-            border-bottom: 3px solid #eee;
-            transition: all 0.3s ease;
-        }
-        
-        .question-text { 
-            font-weight: 700; 
-            display: block; 
-            margin-bottom: 20px; 
-            font-size: 1.15em;
-            color: var(--royal-red);
-        }
-        
-        .options-container { display: flex; flex-direction: column; gap: 12px; }
-        
-        .option-item { 
-            padding: 15px 20px; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: all 0.2s;
-            background: #fff;
-            position: relative;
-        }
+    .progress-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
 
-        .option-item:hover:not(.disabled) { 
-            border-color: var(--gold-primary);
-            background: #fffcf5;
-            transform: translateX(5px);
-        }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      transition: 0.4s;
+    }
 
-        /* Trạng thái đúng/sai */
-        .option-item.correct-choice { 
-            background-color: #d4edda !important; 
-            border-color: var(--correct-green) !important; 
-            color: var(--correct-green) !important;
-            font-weight: bold;
-        }
-        .option-item.correct-choice::after { content: " ✓"; }
+    .question {
+      font-size: 22px;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
 
-        .option-item.wrong-choice { 
-            background-color: #f8d7da !important; 
-            border-color: var(--wrong-red) !important; 
-            color: var(--wrong-red) !important;
-        }
-        .option-item.wrong-choice::after { content: " ✗"; }
+    .answers {
+      display: grid;
+      gap: 15px;
+    }
 
-        .disabled { cursor: not-allowed; opacity: 0.8; }
+    .answer-btn {
+      background: rgba(255,255,255,0.08);
+      border: 2px solid transparent;
+      color: white;
+      padding: 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 16px;
+      text-align: left;
+      transition: 0.3s;
+    }
 
-        .btn-reset { 
-            background: var(--gold-primary); 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 25px; 
-            cursor: pointer; 
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn-reset:hover { background: var(--royal-red); transform: scale(1.05); }
+    .answer-btn:hover {
+      transform: translateY(-2px);
+      border-color: #38bdf8;
+      background: rgba(56,189,248,0.12);
+    }
 
-        @media (max-width: 600px) {
-            .container { padding: 20px; }
-            h1 { font-size: 1.8em; }
-            .taskbar { padding: 10px; font-size: 0.9em; }
-        }
-    </style>
+    .correct {
+      background: rgba(34,197,94,0.2) !important;
+      border-color: #22c55e !important;
+    }
+
+    .wrong {
+      background: rgba(239,68,68,0.2) !important;
+      border-color: #ef4444 !important;
+    }
+
+    .explanation {
+      margin-top: 25px;
+      background: rgba(255,255,255,0.06);
+      padding: 18px;
+      border-radius: 16px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .next-btn {
+      margin-top: 25px;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: none;
+    }
+
+    .next-btn:hover {
+      transform: scale(1.02);
+    }
+
+    .result {
+      text-align: center;
+      display: none;
+    }
+
+    .result h2 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    .result p {
+      font-size: 22px;
+      margin: 10px 0;
+    }
+
+    .restart-btn {
+      margin-top: 25px;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 16px;
+      background: #22c55e;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    @media(max-width: 600px) {
+      .question {
+        font-size: 18px;
+      }
+
+      .answer-btn {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="taskbar">
-    <div class="stats-group">
-        <div class="stat-item">
-            <span class="stat-value" id="count-correct">0</span>
-            <span class="stat-label">Đúng</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value" id="count-wrong" style="color: #ff9999;">0</span>
-            <span class="stat-label">Sai</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value" id="count-total">0</span>
-            <span class="stat-label">Câu</span>
-        </div>
-    </div>
-    <button class="btn-reset" onclick="location.reload()">Làm Lại Đề</button>
-</div>
+<div class="quiz-container">
+  <h1>⚡ Trắc Nghiệm Vật Lí 10</h1>
 
-<div class="container">
-    <h1>Văn Minh Đại Việt</h1>
-    <div id="quiz-container"></div>
+  <div id="quizBox">
+    <div class="top-info">
+      <div class="score-box">✅ Đúng: <span id="correctCount">0</span></div>
+      <div class="score-box">❌ Sai: <span id="wrongCount">0</span></div>
+      <div class="score-box">📘 Câu: <span id="currentQuestion">1</span>/<span id="totalQuestion"></span></div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="question" id="questionText"></div>
+
+    <div class="answers" id="answersBox"></div>
+
+    <div class="explanation" id="explanationBox"></div>
+
+    <button class="next-btn" id="nextBtn">Câu tiếp theo ➜</button>
+  </div>
+
+  <div class="result" id="resultBox">
+    <h2>🎉 Hoàn Thành!</h2>
+    <p>✅ Số câu đúng: <span id="finalCorrect"></span></p>
+    <p>❌ Số câu sai: <span id="finalWrong"></span></p>
+    <p>📊 Điểm số: <span id="finalScore"></span>/10</p>
+    <button class="restart-btn" onclick="restartQuiz()">Làm lại</button>
+  </div>
 </div>
 
 <script>
-// Toàn bộ 50 câu MCQ + 10 câu TF từ yêu cầu trước của bạn được giữ nguyên
-const mcqData = [
-    { q: "Văn minh Đại Việt tồn tại trong khoảng thời gian nào?", a: ["Từ thế kỉ X đến giữa thế kỉ XIX.", "Từ thế kỉ X đến cuối thế kỉ XIX.", "Từ thế kỉ XI đến đầu thế kỉ XX.", "Từ thời sơ sử đến thế kỉ X."], c: 0 },
-    { q: "Nền tảng quan trọng nhất hình thành văn minh Đại Việt là gì?", a: ["Văn minh Văn Lang - Âu Lạc.", "Văn minh Trung Hoa.", "Văn minh Ấn Độ.", "Văn minh phương Tây."], c: 0 },
-    { q: "Yếu tố nào là cơ sở thực tiễn cho sự phát triển của văn minh Đại Việt?", a: ["Công cuộc xây dựng và bảo vệ đất nước của các triều đại độc lập.", "Sự đô hộ của phong kiến phương Bắc.", "Sự du nhập hoàn toàn của văn hóa phương Tây.", "Quá trình di dân ra nước ngoài."], c: 0 },
-    { q: "Văn minh Đại Việt tiếp thu có chọn lọc thành tựu từ đâu?", a: ["Trung Quốc, Ấn Độ và sau này là phương Tây.", "Chỉ từ Trung Quốc.", "Chỉ từ Ấn Độ.", "Các nước Đông Nam Á hải đảo."], c: 0 },
-    { q: "Quốc hiệu 'Đại Việt' được sử dụng chính thức từ năm nào?", a: ["1054", "938", "1010", "1804"], c: 0 },
-    { q: "Thời kỳ nào được coi là giai đoạn bước đầu hình thành văn minh Đại Việt?", a: ["Thời Ngô - Đinh - Tiền Lê.", "Thời Lý - Trần - Hồ.", "Thời Lê Sơ.", "Thời Nguyễn."], c: 0 },
-    { q: "Kinh đô Thăng Long chính thức được chọn từ triều đại nào?", a: ["Triều Lý.", "Triều Ngô.", "Triều Trần.", "Triều Lê Sơ."], c: 0 },
-    { q: "Đặc điểm nổi bật của văn minh thời Lý - Trần là gì?", a: ["'Tam giáo đồng nguyên'.", "Nho giáo độc tôn.", "Chịu ảnh hưởng mạnh của Thiên Chúa giáo.", "Văn hóa dân gian bị mai một."], c: 0 },
-    { q: "Triều đại nào đưa Nho giáo trở thành hệ tư tưởng chính thống, độc tôn?", a: ["Nhà Lê Sơ.", "Nhà Trần.", "Nhà Hồ.", "Nhà Mạc."], c: 0 },
-    { q: "Giai đoạn nào văn minh Đại Việt bắt đầu tiếp xúc phương Tây?", a: ["Thế kỉ XVI - XVIII.", "Thế kỉ X - XIV.", "Thế kỉ XV.", "Thế kỉ XIX."], c: 0 },
-    { q: "Sự kiện nào đánh dấu phục hồi độc lập, mở đường cho văn minh Đại Việt?", a: ["Chiến thắng Bạch Đằng năm 938.", "Chiến thắng Rạch Gầm - Xoài Mút.", "Cuộc cải cách của Minh Mạng.", "Khởi nghĩa Lam Sơn thành công."], c: 0 },
-    { q: "Triều đại thực hiện cải cách hành chính lớn nửa sau thế kỉ XV?", a: ["Nhà Lê Sơ (Lê Thánh Tông).", "Nhà Lý.", "Nhà Trần.", "Nhà Nguyễn."], c: 0 },
-    { q: "Đặc điểm kinh tế nổi bật thời Mạc là gì?", a: ["Kinh tế hướng ngoại, khuyến khích công thương nghiệp.", "Kinh tế khép kín.", "Chỉ tập trung vào nông nghiệp.", "Cấm tuyệt đối buôn bán với nước ngoài."], c: 0 },
-    { q: "Nội dung nào phản ánh đúng văn minh Đại Việt thời Nguyễn?", a: ["Tính thống nhất của đất nước được củng cố.", "Phật giáo thịnh đạt nhất.", "Chữ Quốc ngữ trở thành chữ viết chính thức.", "Xóa bỏ hoàn toàn Nho giáo."], c: 0 },
-    { q: "Thế kỉ XVI-XVII, tôn giáo mới nào du nhập vào Đại Việt?", a: ["Thiên Chúa giáo (Công giáo).", "Đạo Hồi.", "Đạo Tin lành.", "Ấn Độ giáo."], c: 0 },
-    { q: "Thể chế chính trị xuyên suốt của các triều đại Đại Việt là?", a: ["Quân chủ chuyên chế trung ương tập quyền.", "Quân chủ lập hiến.", "Cộng hòa.", "Quý tộc thị tộc."], c: 0 },
-    { q: "Bộ luật nào được ban hành dưới thời vua Lê Thánh Tông?", a: ["Quốc triều hình luật (Luật Hồng Đức).", "Hình thư.", "Hình luật.", "Hoàng Việt luật lệ."], c: 0 },
-    { q: "Bộ luật thành văn đầu tiên của nước ta là bộ luật nào?", a: ["Hình thư (thời Lý).", "Hình luật (thời Trần).", "Luật Gia Long.", "Luật Hồng Đức."], c: 0 },
-    { q: "Cơ quan giám sát quan lại thời Lê Sơ là?", a: ["Ngự sử đài.", "Lục Bộ.", "Hàn lâm viện.", "Quốc tử giám."], c: 0 },
-    { q: "Dưới thời Lê Sơ, đơn vị hành chính địa phương thấp nhất là?", a: ["Xã.", "Đạo.", "Phủ.", "Huyện."], c: 0 },
-    { q: "Ngành kinh tế đóng vai trò nền tảng của văn minh Đại Việt?", a: ["Nông nghiệp lúa nước.", "Thủ công nghiệp.", "Thương nghiệp.", "Khai thác lâm sản."], c: 0 },
-    { q: "Lễ nghi vua thực hiện để khuyến khích nông nghiệp?", a: ["Lễ Tịch điền.", "Lễ Tế Nam Giao.", "Lễ Trung nguyên.", "Lễ Thề."], c: 0 },
-    { q: "Cơ quan chuyên lo đắp đê thành lập từ thời nào?", a: ["Thời Trần (Hà đê sứ).", "Thời Đinh.", "Thời Lý.", "Thời Nguyễn."], c: 0 },
-    { q: "Sản phẩm tiêu biểu của thủ công nghiệp nhà nước?", a: ["Súng thần công, tiền đồng.", "Gốm Chu Đậu.", "Lụa Vạn Phúc.", "Chiếu Nga Sơn."], c: 0 },
-    { q: "Thương cảng quốc tế sầm uất vùng Đông Bắc thời Lý-Trần?", a: ["Vân Đồn.", "Hội An.", "Phố Hiến.", "Thanh Hà."], c: 0 },
-    { q: " 'Kẻ Chợ' là tên gọi dân gian để chỉ khu vực nào?", a: ["Kinh đô Thăng Long.", "Phố cổ Hội An.", "Cố đô Huế.", "Đô thị Gia Định."], c: 0 },
-    { q: "Thành tựu khẳng định trình độ cao của nghề gốm Đại Việt?", a: ["Xuất khẩu sang Nhật Bản, Đông Nam Á và Tây Á.", "Chỉ dùng trong nước.", "Chỉ làm từ đất sét trắng.", "Không có hoa văn."], c: 0 },
-    { q: "Tiền kim loại bắt đầu lưu hành phổ biến từ triều đại nào?", a: ["Triều Đinh.", "Triều Ngô.", "Triều Lý.", "Triều Lê Sơ."], c: 0 },
-    { q: "Nghề thủ công nào được gọi là 'tứ đại khí' thời Lý-Trần?", a: ["Các công trình bằng đồng khổng lồ.", "Dệt, gốm, chạm đá.", "Làm giấy, khảm trai.", "Đóng thuyền chiến."], c: 0 },
-    { q: "Công ty Đông Ấn nước nào đến buôn bán thế kỉ XVII?", a: ["Hà Lan và Anh.", "Pháp và Mỹ.", "Tây Ban Nha và Bồ Đào Nha.", "Đức và Ý."], c: 0 },
-    { q: "Hệ tư tưởng chủ đạo đời sống chính trị từ thế kỉ XV?", a: ["Nho giáo.", "Phật giáo.", "Đạo giáo.", "Công giáo."], c: 0 },
-    { q: "Phật giáo phát triển rực rỡ nhất vào thời kỳ nào?", a: ["Lý - Trần.", "Đinh - Tiền Lê.", "Lê Sơ.", "Nguyễn."], c: 0 },
-    { q: "Dòng thiền nào do Trần Nhân Tông sáng lập?", a: ["Thiền phái Trúc Lâm Yên Tử.", "Thiền Tì-ni-đa-lưu-chi.", "Thiền Vô Ngôn Thông.", "Thiền Thảo Đường."], c: 0 },
-    { q: "Văn Miếu được xây dựng vào năm nào?", a: ["1070", "1076", "1442", "1802"], c: 0 },
-    { q: "Quốc Tử Giám có vai trò là gì?", a: ["Trường đại học công lập đầu tiên.", "Nơi thờ các vị thần.", "Nơi ở của hoàng gia.", "Cơ quan chép sử."], c: 0 },
-    { q: "Chế độ khoa cử chính thức bắt đầu từ năm nào?", a: ["1075", "1010", "1428", "1802"], c: 0 },
-    { q: "Bia Tiến sĩ tại Văn Miếu bắt đầu dựng từ thời vua nào?", a: ["Lê Thánh Tông.", "Lý Thánh Tông.", "Trần Thánh Tông.", "Minh Mạng."], c: 0 },
-    { q: "Mục đích của việc dựng bia Tiến sĩ là gì?", a: ["Vinh danh người đỗ đạt và khuyến khích học tập.", "Để làm đẹp Văn Miếu.", "Ghi tên các vị vua.", "Làm cột mốc biên giới."], c: 0 },
-    { q: "Nhà giáo mệnh danh là 'Vạn thế sư biểu' của Việt Nam?", a: ["Chu Văn An.", "Lê Quý Đôn.", "Nguyễn Trãi.", "Nguyễn Bỉnh Khiêm."], c: 0 },
-    { q: "Nội dung giáo dục chủ yếu thời phong kiến là gì?", a: ["Kinh thư, kinh điển của Nho gia.", "Khoa học kỹ thuật.", "Ngoại ngữ và kinh tế.", "Võ thuật và quân sự."], c: 0 },
-    { q: "Chữ viết sáng tạo dựa trên chữ Hán để ghi âm tiếng Việt?", a: ["Chữ Nôm.", "Chữ Phạn.", "Chữ Quốc ngữ.", "Chữ Latinh."], c: 0 },
-    { q: "Chữ Quốc ngữ xuất hiện tại Việt Nam vào thời gian nào?", a: ["Đầu thế kỉ XVII.", "Thế kỉ X.", "Thế kỉ XV.", "Cuối thế kỉ XIX."], c: 0 },
-    { q: "Tác phẩm 'Bình Ngô đại cáo' là của ai?", a: ["Nguyễn Trãi.", "Lý Thường Kiệt.", "Trần Quốc Tuấn.", "Nguyễn Du."], c: 0 },
-    { q: "Truyện Kiều là kiệt tác văn học viết bằng chữ gì?", a: ["Chữ Nôm.", "Chữ Hán.", "Chữ Quốc ngữ.", "Chữ Pháp."], c: 0 },
-    { q: "Công trình kiến trúc mệnh danh là 'đóa sen nở trên nước'?", a: ["Chùa Một Cột.", "Tháp Phổ Minh.", "Chùa Trấn Quốc.", "Ngọ Môn."], c: 0 },
-    { q: "Nghệ thuật điêu khắc Đại Việt hay thể hiện hình tượng?", a: ["Sư tử, rồng, hoa sen, chim phượng.", "Nhân sư.", "Vị thần Hy Lạp.", "Muông thú phương Tây."], c: 0 },
-    { q: "Nhã nhạc cung đình là di sản tiêu biểu của triều đại?", a: ["Triều Nguyễn.", "Triều Trần.", "Triều Lê Sơ.", "Triều Lý."], c: 0 },
-    { q: "Dòng tranh dân gian nổi tiếng treo vào dịp Tết là?", a: ["Tranh Đông Hồ.", "Tranh sơn dầu.", "Tranh lụa.", "Tranh thủy mặc."], c: 0 },
-    { q: "Nghệ thuật sân khấu phổ biến nông thôn đồng bằng Bắc Bộ?", a: ["Chèo, Múa rối nước.", "Tuồng.", "Cải lương.", "Đờn ca tài tử."], c: 0 },
-    { q: "Ý nghĩa lớn nhất của văn minh Đại Việt là gì?", a: ["Chứng tỏ sức sống mãnh liệt của văn hóa dân tộc.", "Giúp VN giàu có nhất.", "Thay thế văn minh khác.", "Chỉ có giá trị kiến trúc."], c: 0 }
+const questions = [
+  {
+    question: 'Công của lực được tính bằng công thức nào?',
+    answers: ['A = F.s', 'A = F.s.cosα', 'A = F/v', 'A = F.t'],
+    correct: 1,
+    explain: 'Công của lực được tính theo công thức A = F.s.cosα với α là góc giữa lực và chuyển dời.'
+  },
+  {
+    question: 'Một lực 20 N kéo vật đi được 5 m theo đúng hướng của lực. Công thực hiện là:',
+    answers: ['25 J', '50 J', '100 J', '200 J'],
+    correct: 2,
+    explain: 'A = F.s = 20 × 5 = 100 J vì lực cùng hướng chuyển động.'
+  },
+  {
+    question: 'Khi góc giữa lực và chuyển dời bằng 90°, công của lực bằng:',
+    answers: ['0', '1', 'F.s', 'Cực đại'],
+    correct: 0,
+    explain: 'Vì cos90° = 0 nên công bằng 0.'
+  },
+  {
+    question: 'Đơn vị của công suất là:',
+    answers: ['Jun (J)', 'Oát (W)', 'Niutơn (N)', 'Mét (m)'],
+    correct: 1,
+    explain: 'Đơn vị công suất là Oát (W).'
+  },
+  {
+    question: 'Một máy thực hiện công 600 J trong 3 s. Công suất của máy là:',
+    answers: ['100 W', '150 W', '200 W', '300 W'],
+    correct: 2,
+    explain: 'P = A/t = 600/3 = 200 W.'
+  },
+  {
+    question: 'Hiệu suất của máy được tính bằng:',
+    answers: ['H = Atp/Ai', 'H = Pi/Ptp', 'H = Ai/Atp ×100%', 'H = P.t'],
+    correct: 2,
+    explain: 'Hiệu suất bằng công có ích chia công toàn phần nhân 100%.'
+  },
+  {
+    question: 'Một động cơ có công suất 500 W hoạt động trong 10 s. Công thực hiện là:',
+    answers: ['5000 J', '500 J', '50 J', '5 J'],
+    correct: 0,
+    explain: 'A = P.t = 500 × 10 = 5000 J.'
+  },
+  {
+    question: 'Một lực hợp với phương chuyển động góc 60°. Biết F = 10N, s = 4m. Công của lực là:',
+    answers: ['20 J', '40 J', '80 J', '10 J'],
+    correct: 0,
+    explain: 'A = F.s.cos60° = 10×4×0,5 = 20 J.'
+  },
+  {
+    question: 'Động năng của vật phụ thuộc vào:',
+    answers: ['Khối lượng và vận tốc', 'Khối lượng và độ cao', 'Lực tác dụng', 'Thời gian chuyển động'],
+    correct: 0,
+    explain: 'Động năng phụ thuộc khối lượng và vận tốc của vật.'
+  },
+  {
+    question: 'Công thức tính động năng là:',
+    answers: ['Wđ = mv', 'Wđ = 1/2mv²', 'Wđ = mgh', 'Wđ = F.s'],
+    correct: 1,
+    explain: 'Động năng: Wđ = 1/2mv².'
+  },
+  {
+    question: 'Một vật khối lượng 2 kg chuyển động với tốc độ 3 m/s. Động năng của vật là:',
+    answers: ['6 J', '9 J', '18 J', '27 J'],
+    correct: 1,
+    explain: 'Wđ = 1/2×2×3² = 9 J.'
+  },
+  {
+    question: 'Thế năng trọng trường được xác định bằng công thức:',
+    answers: ['Wt = mgh', 'Wt = 1/2mv²', 'Wt = Fv', 'Wt = ma'],
+    correct: 0,
+    explain: 'Thế năng trọng trường: Wt = mgh.'
+  },
+  {
+    question: 'Một vật khối lượng 5 kg ở độ cao 4 m. Lấy g = 10m/s². Thế năng của vật là:',
+    answers: ['50 J', '100 J', '150 J', '200 J'],
+    correct: 3,
+    explain: 'Wt = mgh = 5×10×4 = 200 J.'
+  },
+  {
+    question: 'Cơ năng của vật bằng:',
+    answers: ['Tổng động năng và thế năng', 'Hiệu động năng và thế năng', 'Động năng nhân thế năng', 'Công của lực'],
+    correct: 0,
+    explain: 'Cơ năng bằng tổng động năng và thế năng.'
+  },
+  {
+    question: 'Một vật có động năng 40 J và thế năng 60 J. Cơ năng của vật là:',
+    answers: ['20 J', '40 J', '60 J', '100 J'],
+    correct: 3,
+    explain: 'W = Wđ + Wt = 40 + 60 = 100 J.'
+  },
+  {
+    question: 'Khi vật rơi tự do bỏ qua ma sát thì:',
+    answers: ['Động năng giảm', 'Thế năng tăng', 'Cơ năng bảo toàn', 'Cơ năng giảm'],
+    correct: 2,
+    explain: 'Trong rơi tự do bỏ qua ma sát, cơ năng được bảo toàn.'
+  },
+  {
+    question: 'Động lượng được xác định bằng:',
+    answers: ['p = mv', 'p = ma', 'p = Fv', 'p = Ft'],
+    correct: 0,
+    explain: 'Động lượng: p = mv.'
+  },
+  {
+    question: 'Đơn vị của động lượng là:',
+    answers: ['N', 'kg.m/s', 'J', 'W'],
+    correct: 1,
+    explain: 'Đơn vị động lượng là kg.m/s.'
+  },
+  {
+    question: 'Một vật khối lượng 3 kg chuyển động với vận tốc 4 m/s. Động lượng của vật là:',
+    answers: ['7 kg.m/s', '12 kg.m/s', '24 kg.m/s', '1 kg.m/s'],
+    correct: 1,
+    explain: 'p = mv = 3×4 = 12 kg.m/s.'
+  },
+  {
+    question: 'Xung lượng của lực được tính bằng:',
+    answers: ['F.v', 'F.s', 'F.Δt', 'm.v'],
+    correct: 2,
+    explain: 'Xung lượng lực bằng F.Δt.'
+  },
+  {
+    question: 'Trong hệ cô lập, đại lượng nào được bảo toàn?',
+    answers: ['Công suất', 'Động năng', 'Động lượng', 'Gia tốc'],
+    correct: 2,
+    explain: 'Trong hệ cô lập, động lượng được bảo toàn.'
+  },
+  {
+    question: 'Va chạm mềm là va chạm mà sau va chạm:',
+    answers: ['Hai vật bật ra xa nhau', 'Hai vật dính vào nhau', 'Động năng tăng', 'Lực bằng 0'],
+    correct: 1,
+    explain: 'Va chạm mềm là va chạm hai vật dính vào nhau.'
+  },
+  {
+    question: 'Hai vật có khối lượng lần lượt 2 kg và 3 kg chuyển động cùng chiều với vận tốc 4 m/s và 2 m/s. Tổng động lượng hệ là:',
+    answers: ['14 kg.m/s', '10 kg.m/s', '8 kg.m/s', '6 kg.m/s'],
+    correct: 0,
+    explain: 'p = 2×4 + 3×2 = 14 kg.m/s.'
+  },
+  {
+    question: 'Một lực 50 N tác dụng trong 0,2 s. Xung lượng lực là:',
+    answers: ['2 N.s', '5 N.s', '10 N.s', '25 N.s'],
+    correct: 2,
+    explain: 'FΔt = 50×0,2 = 10 N.s.'
+  },
+  {
+    question: 'Một vật 1 kg đang đứng yên, chịu lực tạo vận tốc 6 m/s. Độ biến thiên động lượng là:',
+    answers: ['1 kg.m/s', '3 kg.m/s', '6 kg.m/s', '12 kg.m/s'],
+    correct: 2,
+    explain: 'Δp = mv = 1×6 = 6 kg.m/s.'
+  },
+  {
+    question: 'Tốc độ góc được xác định bằng:',
+    answers: ['ω = v.r', 'ω = Δθ/Δt', 'ω = 2πr/T', 'ω = ar'],
+    correct: 1,
+    explain: 'ω = Δθ/Δt.'
+  },
+  {
+    question: 'Đơn vị của tốc độ góc là:',
+    answers: ['m/s', 'rad/s', 'vòng/s', 'N'],
+    correct: 1,
+    explain: 'Đơn vị tốc độ góc là rad/s.'
+  },
+  {
+    question: 'Công thức liên hệ giữa tốc độ dài và tốc độ góc:',
+    answers: ['v = ωr', 'v = ω/r', 'v = r/ω', 'v = 2πrω'],
+    correct: 0,
+    explain: 'Tốc độ dài: v = ωr.'
+  },
+  {
+    question: 'Một vật quay đều với ω = 5rad/s, bán kính quỹ đạo 2 m. Tốc độ dài là:',
+    answers: ['2,5 m/s', '5 m/s', '10 m/s', '20 m/s'],
+    correct: 2,
+    explain: 'v = ωr = 5×2 = 10 m/s.'
+  },
+  {
+    question: 'Gia tốc hướng tâm có công thức:',
+    answers: ['aht=v/r', 'aht=v²/r', 'aht=r/v', 'aht=vr'],
+    correct: 1,
+    explain: 'Gia tốc hướng tâm: a = v²/r.'
+  },
+  {
+    question: 'Lực hướng tâm được tính bằng:',
+    answers: ['F=ma', 'F=mv', 'F=mv²/r', 'F=mgh'],
+    correct: 2,
+    explain: 'Fht = mv²/r.'
+  },
+  {
+    question: 'Chu kì là:',
+    answers: ['Số vòng quay trong 1 giây', 'Thời gian vật đi hết 1 vòng', 'Tốc độ góc của vật', 'Số vòng quay trong 1 phút'],
+    correct: 1,
+    explain: 'Chu kì là thời gian vật đi hết một vòng.'
+  },
+  {
+    question: 'Tần số được tính bằng:',
+    answers: ['f = T', 'f = 2πT', 'f = 1/T', 'f = ωT'],
+    correct: 2,
+    explain: 'Tần số: f = 1/T.'
+  },
+  {
+    question: 'Một vật quay với chu kì 2 s. Tần số là:',
+    answers: ['0,5 Hz', '1 Hz', '2 Hz', '4 Hz'],
+    correct: 0,
+    explain: 'f = 1/T = 1/2 = 0,5 Hz.'
+  },
+  {
+    question: 'Nếu tốc độ dài tăng gấp đôi và bán kính không đổi thì gia tốc hướng tâm:',
+    answers: ['Giảm 2 lần', 'Tăng 2 lần', 'Tăng 4 lần', 'Không đổi'],
+    correct: 2,
+    explain: 'a = v²/r nên khi v tăng 2 lần thì a tăng 4 lần.'
+  },
+  {
+    question: 'Định luật Hooke áp dụng cho:',
+    answers: ['Dây điện', 'Lò xo trong giới hạn đàn hồi', 'Chất khí', 'Chất lỏng'],
+    correct: 1,
+    explain: 'Hooke áp dụng cho lò xo trong giới hạn đàn hồi.'
+  },
+  {
+    question: 'Công thức định luật Hooke là:',
+    answers: ['F = ma', 'F = k|Δl|', 'F = mv', 'F = Pt'],
+    correct: 1,
+    explain: 'Fđh = k|Δl|.'
+  },
+  {
+    question: 'Trong công thức Hooke, k là:',
+    answers: ['Chiều dài lò xo', 'Độ biến dạng', 'Độ cứng lò xo', 'Khối lượng vật'],
+    correct: 2,
+    explain: 'k là độ cứng của lò xo.'
+  },
+  {
+    question: 'Một lò xo có k = 100N/m, biến dạng 5 cm. Lực đàn hồi là:',
+    answers: ['0,5 N', '5 N', '50 N', '500 N'],
+    correct: 1,
+    explain: 'F = kΔl = 100×0,05 = 5 N.'
+  },
+  {
+    question: 'Nếu độ biến dạng tăng gấp đôi thì lực đàn hồi:',
+    answers: ['Giảm một nửa', 'Tăng gấp đôi', 'Tăng gấp 4', 'Không đổi'],
+    correct: 1,
+    explain: 'F tỉ lệ thuận với Δl.'
+  },
+  {
+    question: 'Một vật khối lượng 2 kg rơi tự do từ độ cao 20 m. Lấy g = 10m/s². Thế năng ban đầu là:',
+    answers: ['200 J', '300 J', '400 J', '500 J'],
+    correct: 2,
+    explain: 'Wt = mgh = 2×10×20 = 400 J.'
+  },
+  {
+    question: 'Một ô tô chạy với tốc độ 20 m/s. Khối lượng xe là 1000 kg. Động năng của xe là:',
+    answers: ['100000 J', '200000 J', '300000 J', '400000 J'],
+    correct: 1,
+    explain: 'Wđ = 1/2×1000×20² = 200000 J.'
+  },
+  {
+    question: 'Một máy có hiệu suất 80%. Nếu công toàn phần là 500 J thì công có ích là:',
+    answers: ['100 J', '200 J', '300 J', '400 J'],
+    correct: 3,
+    explain: 'Ai = H×Atp = 0,8×500 = 400 J.'
+  },
+  {
+    question: 'Một vật chuyển động tròn đều bán kính 0,5 m với tốc độ 4 m/s. Gia tốc hướng tâm là:',
+    answers: ['8 m/s²', '16 m/s²', '24 m/s²', '32 m/s²'],
+    correct: 3,
+    explain: 'a = v²/r = 16/0,5 = 32 m/s².'
+  },
+  {
+    question: 'Một vật có động lượng 24 kg.m/s và khối lượng 4 kg. Vận tốc của vật là:',
+    answers: ['4 m/s', '5 m/s', '6 m/s', '8 m/s'],
+    correct: 2,
+    explain: 'v = p/m = 24/4 = 6 m/s.'
+  },
+  {
+    question: 'Hai vật va chạm mềm: m1 = 2kg, v1 = 6m/s; m2 = 4kg, v2 = 0. Vận tốc của hệ sau va chạm là:',
+    answers: ['1 m/s', '2 m/s', '3 m/s', '4 m/s'],
+    correct: 1,
+    explain: 'v = (m1v1 + m2v2)/(m1+m2) = 12/6 = 2 m/s.'
+  },
+  {
+    question: 'Một vật chuyển động tròn đều với f = 2Hz. Tốc độ góc là:',
+    answers: ['2π rad/s', '4π rad/s', '6π rad/s', '8π rad/s'],
+    correct: 1,
+    explain: 'ω = 2πf = 4π rad/s.'
+  },
+  {
+    question: 'Một lực 30 N kéo vật đi 10 m hợp với phương chuyển động góc 60°. Công của lực là:',
+    answers: ['150 J', '300 J', '600 J', '60 J'],
+    correct: 0,
+    explain: 'A = F.s.cos60° = 30×10×0,5 = 150 J.'
+  },
+  {
+    question: 'Một vật chuyển động tròn đều với bán kính 2 m, chu kì 4 s. Tốc độ dài của vật là:',
+    answers: ['π m/s', '2π m/s', '4π m/s', '8π m/s'],
+    correct: 0,
+    explain: 'v = 2πr/T = 2π×2/4 = π m/s.'
+  },
+  {
+    question: 'Một lò xo có độ cứng 200N/m. Treo vật làm lò xo dãn 10 cm. Lực đàn hồi của lò xo là:',
+    answers: ['2 N', '10 N', '20 N', '40 N'],
+    correct: 2,
+    explain: 'F = kΔl = 200×0,1 = 20 N.'
+  }
+    {
+    question: 'Khi lực cùng hướng với chuyển động thì:',
+    answers: ['Công âm', 'Công bằng 0', 'Công dương cực đại', 'Công nhỏ nhất'],
+    correct: 2,
+    explain: 'Khi lực cùng hướng chuyển động thì cos0° = 1 nên công đạt cực đại.'
+  },
+
+  {
+    question: 'Một lực 15 N kéo vật đi 8 m theo phương hợp với chuyển động góc 0°. Công của lực là:',
+    answers: ['60 J', '100 J', '120 J', '150 J'],
+    correct: 2,
+    explain: 'A = F.s.cosα = 15.8.1 = 120 J.'
+  },
+
+  {
+    question: 'Một máy thực hiện công 2400 J trong 8 s. Công suất là:',
+    answers: ['200 W', '250 W', '300 W', '400 W'],
+    correct: 2,
+    explain: 'P = A/t = 2400/8 = 300 W.'
+  },
+
+  {
+    question: 'Nếu công suất không đổi, khi thời gian tăng gấp đôi thì công thực hiện:',
+    answers: ['giảm một nửa', 'tăng gấp đôi', 'không đổi', 'tăng gấp bốn'],
+    correct: 1,
+    explain: 'Theo A = P.t nên thời gian tăng gấp đôi thì công tăng gấp đôi.'
+  },
+
+  {
+    question: 'Hiệu suất của máy luôn:',
+    answers: ['lớn hơn 100%', 'nhỏ hơn hoặc bằng 100%', 'bằng 0', 'âm'],
+    correct: 1,
+    explain: 'Hiệu suất không thể vượt quá 100%.'
+  },
+
+  {
+    question: 'Một động cơ có hiệu suất 75%, công toàn phần 800 J. Công có ích là:',
+    answers: ['200 J', '400 J', '600 J', '800 J'],
+    correct: 2,
+    explain: 'A ích = 0,75.800 = 600 J.'
+  },
+
+  {
+    question: 'Một lực hợp với phương chuyển động góc 180°. Công của lực:',
+    answers: ['dương', 'âm', 'bằng 0', 'cực đại'],
+    correct: 1,
+    explain: 'cos180° = -1 nên công âm.'
+  },
+
+  {
+    question: 'Một người nâng vật bằng lực 100 N lên cao 2 m. Công thực hiện là:',
+    answers: ['50 J', '100 J', '200 J', '400 J'],
+    correct: 2,
+    explain: 'A = F.s = 100.2 = 200 J.'
+  },
+
+  {
+    question: 'Động năng tăng khi:',
+    answers: ['vận tốc giảm', 'khối lượng giảm', 'vận tốc tăng', 'độ cao tăng'],
+    correct: 2,
+    explain: 'Động năng phụ thuộc vào bình phương vận tốc.'
+  },
+
+  {
+    question: 'Một vật có khối lượng 4 kg chuyển động với tốc độ 5 m/s. Động năng là:',
+    answers: ['25 J', '40 J', '50 J', '100 J'],
+    correct: 2,
+    explain: 'Wđ = 1/2.mv² = 50 J.'
+  },
+
+  {
+    question: 'Một vật ở độ cao 10 m có khối lượng 2 kg. Lấy g = 10 m/s². Thế năng là:',
+    answers: ['100 J', '150 J', '200 J', '250 J'],
+    correct: 2,
+    explain: 'Wt = mgh = 200 J.'
+  },
+
+  {
+    question: 'Cơ năng của vật được bảo toàn khi:',
+    answers: ['có ma sát', 'chỉ có trọng lực tác dụng', 'có lực cản lớn', 'vật đứng yên'],
+    correct: 1,
+    explain: 'Khi chỉ có trọng lực tác dụng thì cơ năng bảo toàn.'
+  },
+
+  {
+    question: 'Một vật có động năng 70 J và cơ năng 120 J. Thế năng là:',
+    answers: ['40 J', '50 J', '60 J', '70 J'],
+    correct: 1,
+    explain: 'Wt = 120 - 70 = 50 J.'
+  },
+
+  {
+    question: 'Khi vật được nâng lên cao thì:',
+    answers: ['động năng tăng', 'thế năng tăng', 'cơ năng giảm', 'vận tốc tăng'],
+    correct: 1,
+    explain: 'Độ cao tăng nên thế năng tăng.'
+  },
+
+  {
+    question: 'Một vật rơi tự do, bỏ qua ma sát. Khi vận tốc tăng thì:',
+    answers: ['động năng tăng', 'thế năng tăng', 'cơ năng tăng', 'cơ năng giảm'],
+    correct: 0,
+    explain: 'Khi rơi tự do động năng tăng.'
+  },
+
+  {
+    question: 'Một vật khối lượng 1 kg có động năng 18 J. Vận tốc của vật là:',
+    answers: ['3 m/s', '4 m/s', '6 m/s', '9 m/s'],
+    correct: 2,
+    explain: '18 = 1/2.1.v² => v = 6 m/s.'
+  },
+
+  {
+    question: 'Động lượng là đại lượng:',
+    answers: ['vô hướng', 'vectơ', 'không có đơn vị', 'luôn dương'],
+    correct: 1,
+    explain: 'Động lượng là đại lượng vectơ.'
+  },
+
+  {
+    question: 'Một vật khối lượng 5 kg chuyển động với vận tốc 2 m/s. Động lượng là:',
+    answers: ['5 kg.m/s', '7 kg.m/s', '10 kg.m/s', '12 kg.m/s'],
+    correct: 2,
+    explain: 'p = mv = 5.2 = 10 kg.m/s.'
+  },
+
+  {
+    question: 'Xung lượng lực đặc trưng cho:',
+    answers: ['khả năng sinh công', 'độ biến thiên động lượng', 'động năng', 'thế năng'],
+    correct: 1,
+    explain: 'Xung lượng bằng độ biến thiên động lượng.'
+  },
+
+  {
+    question: 'Một lực 40 N tác dụng trong 0,5 s. Xung lượng là:',
+    answers: ['10 N.s', '20 N.s', '30 N.s', '40 N.s'],
+    correct: 1,
+    explain: 'I = F.t = 40.0,5 = 20 N.s.'
+  },
+
+  {
+    question: 'Trong hệ cô lập:',
+    answers: ['cơ năng luôn bảo toàn', 'động năng luôn bảo toàn', 'động lượng bảo toàn', 'vận tốc bảo toàn'],
+    correct: 2,
+    explain: 'Trong hệ cô lập động lượng được bảo toàn.'
+  },
+
+  {
+    question: 'Một vật 2 kg đang đứng yên, sau đó có vận tốc 5 m/s. Độ biến thiên động lượng là:',
+    answers: ['5 kg.m/s', '10 kg.m/s', '15 kg.m/s', '20 kg.m/s'],
+    correct: 1,
+    explain: 'Δp = mv = 2.5 = 10 kg.m/s.'
+  },
+
+  {
+    question: 'Va chạm mềm là va chạm:',
+    answers: ['bảo toàn động năng', 'hai vật dính vào nhau', 'không bảo toàn động lượng', 'không có lực tác dụng'],
+    correct: 1,
+    explain: 'Sau va chạm mềm hai vật dính vào nhau.'
+  },
+
+  {
+    question: 'Hai vật có động lượng ngược chiều bằng nhau thì tổng động lượng hệ:',
+    answers: ['bằng 0', 'cực đại', 'âm', 'dương'],
+    correct: 0,
+    explain: 'Hai vectơ ngược chiều cùng độ lớn thì tổng bằng 0.'
+  },
+
+  {
+    question: 'Trong chuyển động tròn đều, vectơ vận tốc:',
+    answers: ['luôn không đổi', 'luôn hướng vào tâm', 'tiếp tuyến quỹ đạo', 'hướng ra xa tâm'],
+    correct: 2,
+    explain: 'Vectơ vận tốc luôn tiếp tuyến với quỹ đạo.'
+  },
+
+  {
+    question: 'Một vật quay đều với bán kính 0,2 m và tốc độ góc 10 rad/s. Tốc độ dài là:',
+    answers: ['1 m/s', '2 m/s', '3 m/s', '4 m/s'],
+    correct: 1,
+    explain: 'v = ωr = 10.0,2 = 2 m/s.'
+  },
+
+  {
+    question: 'Gia tốc hướng tâm luôn:',
+    answers: ['tiếp tuyến quỹ đạo', 'hướng vào tâm', 'hướng ra ngoài', 'bằng 0'],
+    correct: 1,
+    explain: 'Gia tốc hướng tâm luôn hướng vào tâm.'
+  },
+
+  {
+    question: 'Một vật chuyển động tròn đều với v = 6 m/s, r = 3 m. Gia tốc hướng tâm là:',
+    answers: ['6 m/s²', '9 m/s²', '12 m/s²', '18 m/s²'],
+    correct: 2,
+    explain: 'aht = v²/r = 36/3 = 12 m/s².'
+  },
+
+  {
+    question: 'Chu kì và tần số liên hệ bằng:',
+    answers: ['f = T', 'f = 2πT', 'f = 1/T', 'T = 2πf'],
+    correct: 2,
+    explain: 'f = 1/T.'
+  },
+
+  {
+    question: 'Một vật quay với tần số 5 Hz. Chu kì là:',
+    answers: ['0,1 s', '0,2 s', '0,5 s', '5 s'],
+    correct: 1,
+    explain: 'T = 1/f = 1/5 = 0,2 s.'
+  },
+
+  {
+    question: 'Tốc độ góc được tính bằng:',
+    answers: ['ω = 2πf', 'ω = vf', 'ω = r/f', 'ω = v/r²'],
+    correct: 0,
+    explain: 'ω = 2πf.'
+  },
+
+  {
+    question: 'Một vật chuyển động tròn đều với T = 4 s. Tốc độ góc là:',
+    answers: ['π/2 rad/s', 'π rad/s', '2π rad/s', '4π rad/s'],
+    correct: 0,
+    explain: 'ω = 2π/T = π/2 rad/s.'
+  },
+
+  {
+    question: 'Lực đàn hồi xuất hiện khi:',
+    answers: ['vật chuyển động', 'vật bị biến dạng', 'vật đứng yên', 'vật nóng lên'],
+    correct: 1,
+    explain: 'Lực đàn hồi xuất hiện khi vật bị biến dạng.'
+  },
+
+  {
+    question: 'Một lò xo có độ cứng 50 N/m, biến dạng 0,2 m. Lực đàn hồi là:',
+    answers: ['5 N', '10 N', '15 N', '20 N'],
+    correct: 1,
+    explain: 'F = kΔl = 50.0,2 = 10 N.'
+  },
+
+  {
+    question: 'Trong giới hạn đàn hồi, lực đàn hồi:',
+    answers: ['tỉ lệ nghịch với độ biến dạng', 'không đổi', 'tỉ lệ thuận với độ biến dạng', 'luôn bằng 0'],
+    correct: 2,
+    explain: 'Theo định luật Hooke F = kΔl.'
+  },
+
+  {
+    question: 'Đơn vị của độ cứng lò xo là:',
+    answers: ['N', 'N/m', 'J', 'kg'],
+    correct: 1,
+    explain: 'Độ cứng lò xo có đơn vị N/m.'
+  },
+
+  {
+    question: 'Nếu độ cứng lò xo tăng gấp đôi, cùng độ biến dạng thì lực đàn hồi:',
+    answers: ['giảm 2 lần', 'tăng 2 lần', 'tăng 4 lần', 'không đổi'],
+    correct: 1,
+    explain: 'F = kΔl nên k tăng đôi thì F tăng đôi.'
+  },
+
+  {
+    question: 'Một lò xo chịu lực 30 N và dãn 0,1 m. Độ cứng lò xo là:',
+    answers: ['100 N/m', '200 N/m', '300 N/m', '400 N/m'],
+    correct: 2,
+    explain: 'k = F/Δl = 30/0,1 = 300 N/m.'
+  },
+
+  {
+    question: 'Một vật 3 kg chuyển động với vận tốc 4 m/s. Động năng là:',
+    answers: ['12 J', '18 J', '24 J', '36 J'],
+    correct: 2,
+    explain: 'Wđ = 1/2.3.16 = 24 J.'
+  },
+
+  {
+    question: 'Một vật rơi từ độ cao 15 m. Lấy g = 10 m/s², khối lượng 2 kg. Thế năng ban đầu là:',
+    answers: ['150 J', '200 J', '250 J', '300 J'],
+    correct: 3,
+    explain: 'Wt = 2.10.15 = 300 J.'
+  },
+
+  {
+    question: 'Một máy có công suất 1500 W hoạt động trong 20 s. Công thực hiện là:',
+    answers: ['15000 J', '20000 J', '30000 J', '40000 J'],
+    correct: 2,
+    explain: 'A = P.t = 1500.20 = 30000 J.'
+  },
+
+  {
+    question: 'Một vật chuyển động tròn đều với r = 1 m, v = 5 m/s. Gia tốc hướng tâm là:',
+    answers: ['5 m/s²', '10 m/s²', '20 m/s²', '25 m/s²'],
+    correct: 3,
+    explain: 'aht = v²/r = 25/1 = 25 m/s².'
+  },
+
+  {
+    question: 'Một xe có khối lượng 800 kg chuyển động với vận tốc 10 m/s. Động lượng là:',
+    answers: ['2000 kg.m/s', '4000 kg.m/s', '8000 kg.m/s', '10000 kg.m/s'],
+    correct: 2,
+    explain: 'p = mv = 800.10 = 8000 kg.m/s.'
+  },
+
+  {
+    question: 'Một vật chịu lực 25 N trong 4 s. Xung lượng lực là:',
+    answers: ['25 N.s', '50 N.s', '75 N.s', '100 N.s'],
+    correct: 3,
+    explain: 'I = F.t = 25.4 = 100 N.s.'
+  },
+
+  {
+    question: 'Một vật quay đều với f = 10 Hz. Tốc độ góc là:',
+    answers: ['10π rad/s', '20π rad/s', '30π rad/s', '40π rad/s'],
+    correct: 1,
+    explain: 'ω = 2πf = 20π rad/s.'
+  },
+
+  {
+    question: 'Một lực 40 N kéo vật đi 5 m theo hướng hợp góc 60°. Công thực hiện là:',
+    answers: ['50 J', '100 J', '150 J', '200 J'],
+    correct: 1,
+    explain: 'A = F.s.cos60° = 40.5.0,5 = 100 J.'
+  },
+
+  {
+    question: 'Một lò xo có độ cứng 400 N/m bị dãn 0,05 m. Lực đàn hồi là:',
+    answers: ['10 N', '20 N', '30 N', '40 N'],
+    correct: 1,
+    explain: 'F = kΔl = 400.0,05 = 20 N.'
+  },
+
+  {
+    question: 'Hai vật có khối lượng bằng nhau chuyển động ngược chiều với cùng tốc độ. Tổng động lượng hệ:',
+    answers: ['cực đại', 'bằng 0', 'dương', 'âm'],
+    correct: 1,
+    explain: 'Hai động lượng triệt tiêu nhau.'
+  },
+
+  {
+    question: 'Một vật chuyển động tròn đều bán kính 2 m với tốc độ dài 2π m/s. Chu kì là:',
+    answers: ['1 s', '2 s', '3 s', '4 s'],
+    correct: 1,
+    explain: 'T = 2πr/v = 4π/2π = 2 s.'
+  },
+
+  {
+    question: 'Một vật có cơ năng 500 J và động năng 200 J. Thế năng của vật là:',
+    answers: ['100 J', '200 J', '300 J', '700 J'],
+    correct: 2,
+    explain: 'Wt = 500 - 200 = 300 J.'
+  },
+
+  {
+    question: 'Nếu vận tốc tăng gấp đôi thì động năng:',
+    answers: ['tăng 2 lần', 'tăng 3 lần', 'tăng 4 lần', 'không đổi'],
+    correct: 2,
+    explain: 'Wđ tỉ lệ với bình phương vận tốc.'
+  },
+
+  {
+    question: 'Trong chuyển động tròn đều, lực hướng tâm có tác dụng:',
+    answers: ['làm vật đổi hướng', 'làm vật tăng tốc', 'làm vật dừng lại', 'làm giảm khối lượng'],
+    correct: 0,
+    explain: 'Lực hướng tâm chỉ làm đổi hướng vận tốc.'
+  }
 ];
 
-const tfData = [
-    { q: "Văn minh Đại Việt là sự kế thừa trực tiếp từ văn minh Văn Lang - Âu Lạc.", c: "Đúng" },
-    { q: "Chữ Nôm là chữ chính thống trong văn bản hành chính thời Lý - Trần.", c: "Sai" },
-    { q: " 'Tam giáo đồng nguyên' gồm Phật, Nho, Đạo cùng tồn tại hòa hợp.", c: "Đúng" },
-    { q: "Nhà nước Đại Việt phong kiến không hề chú trọng phát triển thương nghiệp.", c: "Sai" },
-    { q: "Luật Hồng Đức có điểm tiến bộ là bảo vệ quyền lợi phụ nữ.", c: "Đúng" },
-    { q: "Chữ Quốc ngữ do người Việt tự sáng tạo dựa trên cải tiến chữ Nôm.", c: "Sai" },
-    { q: "Dưới thời Nguyễn, tính thống nhất đất nước được củng cố mạnh mẽ.", c: "Đúng" },
-    { q: "Tất cả triều đại Đại Việt đều đặt kinh đô tại Thăng Long.", c: "Sai" },
-    { q: "Khoa cử thời Lê Sơ tổ chức quy củ để tuyển chọn hiền tài.", c: "Đúng" },
-    { q: "Văn minh Đại Việt kết thúc hoàn toàn khi Pháp xâm lược.", c: "Sai" }
-];
+let currentIndex = 0;
+let correct = 0;
+let wrong = 0;
 
-let correctCount = 0;
-let wrongCount = 0;
-let answeredTotal = 0;
+const questionText = document.getElementById('questionText');
+const answersBox = document.getElementById('answersBox');
+const explanationBox = document.getElementById('explanationBox');
+const nextBtn = document.getElementById('nextBtn');
+const correctCount = document.getElementById('correctCount');
+const wrongCount = document.getElementById('wrongCount');
+const currentQuestion = document.getElementById('currentQuestion');
+const totalQuestion = document.getElementById('totalQuestion');
+const progressBar = document.getElementById('progressBar');
 
-function updateTaskbar() {
-    document.getElementById('count-correct').innerText = correctCount;
-    document.getElementById('count-wrong').innerText = wrongCount;
-    document.getElementById('count-total').innerText = answeredTotal;
+const quizBox = document.getElementById('quizBox');
+const resultBox = document.getElementById('resultBox');
+
+const finalCorrect = document.getElementById('finalCorrect');
+const finalWrong = document.getElementById('finalWrong');
+const finalScore = document.getElementById('finalScore');
+
+totalQuestion.innerText = questions.length;
+
+function loadQuestion() {
+  const q = questions[currentIndex];
+
+  questionText.innerHTML = q.question;
+  answersBox.innerHTML = '';
+  explanationBox.style.display = 'none';
+  nextBtn.style.display = 'none';
+
+  currentQuestion.innerText = currentIndex + 1;
+
+  progressBar.style.width = ((currentIndex) / questions.length) * 100 + '%';
+
+  q.answers.forEach((answer, index) => {
+    const btn = document.createElement('button');
+    btn.classList.add('answer-btn');
+    btn.innerHTML = answer;
+
+    btn.onclick = () => checkAnswer(index, btn);
+
+    answersBox.appendChild(btn);
+  });
 }
 
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+function checkAnswer(selected, button) {
+  const q = questions[currentIndex];
+  const buttons = document.querySelectorAll('.answer-btn');
+
+  buttons.forEach(btn => btn.disabled = true);
+
+  if (selected === q.correct) {
+    button.classList.add('correct');
+    correct++;
+    correctCount.innerText = correct;
+
+    explanationBox.innerHTML = '✅ Chính xác!<br><br>' + q.explain;
+  } else {
+    button.classList.add('wrong');
+    buttons[q.correct].classList.add('correct');
+
+    wrong++;
+    wrongCount.innerText = wrong;
+
+    explanationBox.innerHTML = `❌ Sai rồi!<br><br><b>Đáp án đúng:</b> ${q.answers[q.correct]}<br><br>${q.explain}`;
+  }
+
+  explanationBox.style.display = 'block';
+  nextBtn.style.display = 'block';
 }
 
-function handleSelection(card, selectedIdx, correctIdx) {
-    if (card.classList.contains('answered')) return;
-    
-    card.classList.add('answered');
-    answeredTotal++;
-    
-    const options = card.querySelectorAll('.option-item');
-    options.forEach(opt => opt.classList.add('disabled'));
+nextBtn.onclick = () => {
+  currentIndex++;
 
-    if (selectedIdx == correctIdx) {
-        options[selectedIdx].classList.add('correct-choice');
-        correctCount++;
-    } else {
-        options[selectedIdx].classList.add('wrong-choice');
-        options[correctIdx].classList.add('correct-choice');
-        wrongCount++;
-    }
-    updateTaskbar();
+  if (currentIndex < questions.length) {
+    loadQuestion();
+  } else {
+    showResult();
+  }
+};
+
+function showResult() {
+  quizBox.style.display = 'none';
+  resultBox.style.display = 'block';
+
+  finalCorrect.innerText = correct;
+  finalWrong.innerText = wrong;
+
+  const score = ((correct / questions.length) * 10).toFixed(1);
+  finalScore.innerText = score;
 }
 
-function render() {
-    const container = document.getElementById('quiz-container');
-    let html = '<h3>Phần 1: Trắc Nghiệm</h3>';
-    
-    const shuffledMCQ = shuffle([...mcqData]);
-    shuffledMCQ.forEach((item, i) => {
-        const correctText = item.a[item.c];
-        const options = shuffle([...item.a]);
-        const newCorrect = options.indexOf(correctText);
-        
-        const cardId = `mcq-${i}`;
-        html += `<div class="question-card" id="${cardId}">
-            <span class="question-text">Câu hỏi ${i+1}: ${item.q}</span>
-            <div class="options-container">
-                ${options.map((opt, idx) => `
-                    <div class="option-item" onclick="handleSelection(document.getElementById('${cardId}'), ${idx}, ${newCorrect})">
-                        ${opt}
-                    </div>
-                `).join('')}
-            </div>
-        </div>`;
-    });
+function restartQuiz() {
+  currentIndex = 0;
+  correct = 0;
+  wrong = 0;
 
-    html += '<h3>Phần 2: Đúng / Sai</h3>';
-    const shuffledTF = shuffle([...tfData]);
-    shuffledTF.forEach((item, i) => {
-        const correctIdx = item.c === "Đúng" ? 0 : 1;
-        const cardId = `tf-${i}`;
-        html += `<div class="question-card" id="${cardId}">
-            <span class="question-text">Câu hỏi ${i+51}: ${item.q}</span>
-            <div class="options-container" style="flex-direction: row; gap: 20px;">
-                <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 0, ${correctIdx})">Đúng</div>
-                <div class="option-item" style="flex:1; text-align:center;" onclick="handleSelection(document.getElementById('${cardId}'), 1, ${correctIdx})">Sai</div>
-            </div>
-        </div>`;
-    });
-    container.innerHTML = html;
+  correctCount.innerText = 0;
+  wrongCount.innerText = 0;
+
+  quizBox.style.display = 'block';
+  resultBox.style.display = 'none';
+
+  loadQuestion();
 }
 
-window.onload = render;
+loadQuestion();
 </script>
+
 </body>
 </html>
